@@ -7,7 +7,7 @@ im1_p = (im1_p - 2048)*pi/2048;
 
 phantom1 = (imfill((im1_m(:,:,1)>200),'holes'));
 for k = 1:size(im1_p,3),
-    im1_p(:,:,k) = im1_p(:,:,k) .* phantom1;
+    im1_p(:,:,k) = im1_p(:,:,k) .* int16(phantom1);
 end
 
 figure,imagesc(im1_p(:,:,8))

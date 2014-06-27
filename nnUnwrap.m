@@ -1,8 +1,6 @@
 function [im1_p,centPos] = nnUnwrap(im1_m,im1_p,alpha,centPos,showFig)
 
 %alpha = 1.5;
-% im1_m = im1(:,:,1:8);
-% im1_p = im1(:,:,9:16);
 im1_p = double(im1_p - 2048)*pi/2048;
 
 phantom1 = double(imfill((im1_m(:,:,1)>200),'holes'));

@@ -83,7 +83,7 @@ mn_M = mean(im_ph_M,4);
 mn_S = mean(im_ph_S,4);
 
 %% Direction average (bulk motion)
-%size(im_ph_P(4))
+size(im_ph_P(4))
 for h = 1:8,
     mnb_P(h) = mean(nonzeros(im_ph_P(:,:,4,h)));
     im_ph_P(:,:,:,h) = im_ph_P(:,:,:,h) - mnb_P(h);
@@ -104,7 +104,7 @@ end
 
 for ph = 1:nPhases,
     for sl = 1:nSlices, 
-        im_mag(:,:,sl,ph) = mean(im1a_r(:,:,sl,ph,:),5)
+        im_mag(:,:,sl,ph) = mean(im1a_r(:,:,sl,ph,:),5);
     end
 end
 

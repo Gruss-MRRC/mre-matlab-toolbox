@@ -1,12 +1,21 @@
 function [im_mag, im_phase] = getMREimages(sliceRange,showFig)
 
+% Extract magnitude and phase images from DICOM files.
+% Inputs:
+%     Slice range: Range, e.g., 1:8
+%     showFig:     Display images, true or false (faster with false)
+% Outputs:
+%     im_mag:      Matrix
+%     im_phase:    Matrix
+% See also getMRESinkus
+
 [f p] = uigetfile('*.dicom');
 im1 = double(squeeze(dicomread([p f])));
 
 [status,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
-nSlices = str2num(result);
+nSlices = str2num(result)
 [status,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-nPhases = str2num(result);
+nPhases = str2num(result)
 
 for j = 1:2*nSlices,
     for k = 1:nPhases,
