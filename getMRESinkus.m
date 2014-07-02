@@ -1,6 +1,17 @@
 function [im_mag, im_phase] = getMRESinkus(showFig)
 
 % Extract magnitude and phase images from DICOM files.
+% On run, prompts for a DICOM image of the subject's brain
+% and a NIFTI (*.nii) image created using the Brain
+% Extraction Toolbox (BET). The NIFTI image is used as 
+% a mask to determine tissue location. An phase-unwrapping
+% (anti-aliasing) step is performed before returning 
+% data structures containing magnitude and phase information.
+% These images may be analysed slice-by-slice using, e.g,
+% >> for i = 1:8, subplot(2,4,i), 
+%      imagesc(<PHASE IMAGE>(:,:,<SLICE>,i,<DIRECTION>)), 
+%      axis square, 
+%    end
 %
 % Inputs:
 %   showFig:     Display images, true or false (faster with false)
@@ -13,6 +24,7 @@ function [im_mag, im_phase] = getMRESinkus(showFig)
 %   NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
 %   dcmdump: /gmrrc/mrbin/dcmdump
 %   GNU core utils
+%   Expects a DICOM and NIFTI image to already exist.
 %
 % Authors:
 %   Based on code by Ralph Sinkus <ralph.sinkus@kcl.ac.uk>
@@ -104,7 +116,7 @@ end
 
 for ph = 1:nPhases,
     for sl = 1:nSlices, 
-        im_mag(:,:,sl,ph) = mean(im1a_r(:,:,sl,ph,:),5)
+        im_mag(:,:,sl,ph) = mean(im1a_r(:,:,sl,ph,:),5);
     end
 end
 

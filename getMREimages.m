@@ -1,12 +1,23 @@
 function [im_mag, im_phase] = getMREimages(sliceRange,showFig)
 
 % Extract magnitude and phase images from DICOM files.
+%
 % Inputs:
-%     Slice range: Range, e.g., 1:8
-%     showFig:     Display images, true or false (faster with false)
+%   sliceRange:  Range, e.g., 1:8
+%   showFig:     Display images, true or false (faster with false)
+%
 % Outputs:
-%     im_mag:      Matrix
-%     im_phase:    Matrix
+%   im_mag:      4-D Matrix (x,y,z-slice,phase)
+%   im_phase:    4-D Matrix (x,y,z-slice,phase)
+%
+% Depends:
+%   dcmdump: /gmrrc/mrbin/dcmdump
+%   GNU core utils
+%
+% Authors:
+%   Mark Wagshul <mark.wagshul@einstein.yu.edu>
+%   Alex Krolick <amk283@cornell.edu>
+%
 % See also getMRESinkus
 
 [f p] = uigetfile('*.dicom');
