@@ -1,4 +1,4 @@
-function [im1_p,centPos] = nnUnwrap(im1_m,im1_p,alpha,centPos,showFig)
+function [im1_p,centPos] = nnUnwrap(im1_m,im1_p,alpha,centPos,showFig,P_axes)
 
 %alpha = 1.5;
 im1_p = double(im1_p - 2048)*pi/2048;
@@ -9,7 +9,7 @@ for k = 1:size(im1_p,3),
 end
 
 if isempty(centPos)
-    figure(1),imagesc(im1_p(:,:,1)) % get center
+    imagesc(im1_p(:,:,1),'Parent',P_axes) % get center
     centPos = round(ginput(1));
 end
 
@@ -22,7 +22,7 @@ for j = 1:s1(3),
     stdPhase = std(nonzeros(im1_p(centPos(2)-1:centPos(2)+1,centPos(1)-1:centPos(1)+1,j)));
     if stdPhase > 1,
         % reacquire center, too close to phase alias edge
-        figure(1),imagesc(im1_p(:,:,j)) % get center
+        imagesc(im1_p(:,:,j),'Parent',P_axes) % get center
         centPos = round(ginput(1));
     end
     insidePhantom = 0;

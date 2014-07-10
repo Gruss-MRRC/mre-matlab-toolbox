@@ -1,4 +1,4 @@
-function [im_mag, im_phase] = getMREimages(sliceRange,showFig)
+function [im_mag, im_phase] = getMREimages(sliceRange,showFig,P_axes)
 
 % Extract magnitude and phase images from DICOM files.
 %
@@ -24,9 +24,9 @@ function [im_mag, im_phase] = getMREimages(sliceRange,showFig)
 im1 = double(squeeze(dicomread([p f])));
 
 [status,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
-nSlices = str2num(result)
+nSlices = str2num(result);
 [status,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-nPhases = str2num(result)
+nPhases = str2num(result);
 
 for j = 1:2*nSlices,
     for k = 1:nPhases,
@@ -40,7 +40,7 @@ im1a_i = im1a(:,:,nSlices+1:2*nSlices,:);
 centPos = [];
 %for k = 1:nSlices, 
 for j = sliceRange,
-    [im1a_ph(:,:,:,j),centPos] = nnUnwrap(squeeze(im1a_r(:,:,j,:)),squeeze(im1a_i(:,:,j,:)),1,centPos,showFig);
+    [im1a_ph(:,:,:,j),centPos] = nnUnwrap(squeeze(im1a_r(:,:,j,:)),squeeze(im1a_i(:,:,j,:)),1,centPos,showFig,P_axes);
 end
 
 %for j = 1:nSlices,
