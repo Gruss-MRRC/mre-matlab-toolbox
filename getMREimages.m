@@ -1,10 +1,15 @@
-function [im_mag, im_phase] = getMREimages(sliceRange,showFig,P_axes)
+function [im_mag, im_phase] = getMREimages(sliceRange,showFig,P_axes,f,p)
 
 % Extract magnitude and phase images from DICOM files.
 %
 % Inputs:
 %   sliceRange:  Range, e.g., 1:8
 %   showFig:     Display images, true or false (faster with false)
+%   P_axes:      Parent axes handle (where to draw the figure)
+%   f:           .dicom file
+%   p:           path to f
+%   
+%   Retrieve f and p with [f p] = uigetfile('*.dicom')
 %
 % Outputs:
 %   im_mag:      4-D Matrix (x,y,z-slice,phase)
@@ -20,7 +25,7 @@ function [im_mag, im_phase] = getMREimages(sliceRange,showFig,P_axes)
 %
 % See also getMRESinkus
 
-[f p] = uigetfile('*.dicom');
+%[f p] = uigetfile('*.dicom');
 im1 = double(squeeze(dicomread([p f])));
 
 [status,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);

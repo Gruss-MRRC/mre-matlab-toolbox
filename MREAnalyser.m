@@ -22,7 +22,7 @@ function varargout = MREAnalyser(varargin)
 
 % Edit the above text to modify the response to help MREAnalyser
 
-% Last Modified by GUIDE v2.5 10-Jul-2014 12:17:38
+% Last Modified by GUIDE v2.5 11-Jul-2014 13:48:01
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -160,7 +160,7 @@ function openMenuItem_Callback(hObject, eventdata, handles)
 % hObject    handle to openMenuItem (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-openFile(handles)
+openFile(hObject,handles)
 
 
 % --- Executes during object creation, after setting all properties.
@@ -268,17 +268,36 @@ function openFile_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to openFile (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-openFile(handles)
+openFile(hObject,handles)
 
-function openFile(handles)
-f = handles.sliceWindow;
+function openFile(hObject,handles)
+% Open a MRE image file and pass it to the appropriate handler function
+
+status(handles,'Opening...')
+
+[f p index] = uigetfile({'*.dicom','MRE image';
+    '*.dicom','Motion-encoded MRE image'});
+
+status(handles,'Processing...');
+w = handles.sliceWindow;
 i = handles.curImg;
-status(handles,'Loading...');
-[mag, phase] = getMREimages(1:30,false,f);
-status(handles,'Image loaded')
-handles.images{i}.mag = mag;
-handles.images{i}.phase = phase;
-handles.activeImg = handles.images{i}.phase;
+switch index
+    case 1 % MRE Image
+        [mag, phase] = getMREimages(1:30,false,w,f,p);
+        handles.images{i}.mag = mag;
+        handles.images{i}.phase = phase;
+        handles.activeImg = handles.images{i}.phase;
+        set(handles.dirBtnGrp,'Visible','off');
+    case 2 % Motion-sensitized MRE image
+        [mag, phase] = getMRESinkus(false,f,p,handles.sliceWindow);
+        handles.images{i}.mag = mag;
+        handles.images{i}.phase = phase(:,:,:,:,:);
+        % TODO: ADD REAL SUPPORT FOR MOTION ENCODING
+        handles.activeImg = phase(:,:,:,:,1);
+        set(handles.dirBtnGrp,'Visible','on');
+end
+
+
 p = handles.phaseSelect;
 s = handles.sliceSelect;
 dims = size(handles.activeImg);
@@ -288,11 +307,11 @@ set(p,'Min',1), set(p,'Max',numPhases), set(p, 'Value',1);
 set(s, 'SliderStep', [1 1]/(numSlices-1));
 set(p, 'SliderStep', [1 1]/(numPhases-1));
 
-redraw(handles);
 guidata(hObject,handles);
 set(handles.magToggle,'SelectedObject',handles.phaseBtn);
 updateCAxis(handles);
-
+redraw(handles);
+status(handles,'Phase unwrapping complete')
 
 % --------------------------------------------------------------------
 function saveMovie_Callback(hObject, eventdata, handles)
@@ -337,8 +356,14 @@ i = handles.curImg;
 switch hObject
     case handles.magBtn
         handles.activeImg = handles.images{i}.mag;
+        if length(size(handles.images{i}.phase))==5
+            set(handles.dirBtnGrp,'Visible','off');
+        end
     case handles.phaseBtn
         handles.activeImg = handles.images{i}.phase;
+        if length(size(handles.images{i}.phase))==5
+            set(handles.dirBtnGrp,'Visible','on');
+        end
 end
 guidata(hObject,handles)
 updateCAxis(handles)
@@ -367,3 +392,35 @@ end
 set(handles.cAxis,'Value',0);
 set(handles.cAxis,'Max',1.5*m);
 set(handles.cAxis,'Value',0.75*m);
+
+
+% --- Executes on button press in helpBtn.
+function helpBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to helpBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+msgbox('Contact Mark Wagshul <mark.wagshul@einstein.yu.edu> or Alex Krolick <amk283@cornell.edu>','Help')
+
+
+% --- Executes when selected object is changed in dirBtnGrp.
+function dirBtnGrp_SelectionChangeFcn(hObject, eventdata, handles)
+% hObject    handle to the selected object in dirBtnGrp 
+% eventdata  structure with the following fields (see UIBUTTONGROUP)
+%	EventName: string 'SelectionChanged' (read only)
+%	OldValue: handle of the previously selected object or empty if none was selected
+%	NewValue: handle of the currently selected object
+% handles    structure with handles and user data (see GUIDATA)
+i = handles.curImg;
+switch hObject
+    case handles.xBtn
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,1);
+    case handles.yBtn
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,2);
+    case handles.zBtn
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,3);
+    case handles.bBtn
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,4);
+end
+guidata(hObject,handles)
+updateCAxis(handles)
+redraw(handles)

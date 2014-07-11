@@ -1,4 +1,4 @@
-function [im_mag, im_phase] = getMRESinkus(showFig)
+function [im_mag, im_phase] = getMRESinkus(showFig,f,p,P_axes)
 
 % Extract magnitude and phase images from DICOM files.
 % On run, prompts for a DICOM image of the subject's brain
@@ -15,6 +15,8 @@ function [im_mag, im_phase] = getMRESinkus(showFig)
 %
 % Inputs:
 %   showFig:     Display images, true or false (faster with false)
+%   f,p:         Filename (f) and path (p) 
+%   P_axes:      Parent axes handle
 %
 % Outputs:
 %   im_mag:      4D Matrix (x,y,slice,phase)
@@ -34,7 +36,7 @@ function [im_mag, im_phase] = getMRESinkus(showFig)
 % See also getMREimages, load_untouch_nii
 
 %% File selection
-[f p] = uigetfile('*.dicom');
+% [f p] = uigetfile('*.dicom');
 filename = [p '../RAW/' strtok(f,'.') '.nii'];
 if exist(filename) > 0,
     im1 = lunii('Select nifti image',filename);
@@ -73,11 +75,11 @@ end
 
 %% Ask user to pick center of image and dealias
 centPos = [];
-uiwait(msgbox('Select center to begin dealiasing step','Phase unwrapping'))
+%uiwait(msgbox('Select center to begin dealiasing step','Phase unwrapping'))
 colormap('gray')
 for k = 1:nDirs, 
     for j = 1:nSlices,
-        [im1a_ph(:,:,:,j,k),centPos] = nnUnwrap(squeeze(im1a_r(:,:,j,:,k)),squeeze(im1a_i(:,:,j,:,k)),1,centPos,showFig);
+        [im1a_ph(:,:,:,j,k),centPos] = nnUnwrap(squeeze(im1a_r(:,:,j,:,k)),squeeze(im1a_i(:,:,j,:,k)),1,centPos,showFig,P_axes);
     end
 end
 
