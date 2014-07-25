@@ -191,7 +191,9 @@ switch get(handles.magToggle,'SelectedObject')
 end
 imagesc(handles.activeImg(:,:,s,p),...
         'Parent',handles.sliceWindow);
-    axis square;
+    axis square off;
+    box off;
+    
     caxis(clim);
 
 
@@ -275,8 +277,9 @@ function openFile(hObject,handles)
 statusMsg(handles,'Opening...');
 
 [f p index] = uigetfile({...
-    '*.dicom','MRE image';...
-    '*.dicom','Motion-encoded MRE image'});
+    '*.dicom','DICOM MRE image';...
+    '*.dicom','DICOM Motion-encoded MRE image';...
+    '*.nii',  'NIFTI image'});
 
 w = handles.sliceWindow;
 i = handles.curImg;
@@ -308,8 +311,7 @@ switch index
         handles.images{i}.mag = mag;
         handles.images{i}.phase = phase;
         handles.activeImg = phase(:,:,:,:,1);
-        set(handles.dirBtnGrp,'Visible','off');
-        
+        set(handles.dirBtnGrp,'Visible','off');  
     case 2 % Motion-sensitized MRE image
         %[mag, phase] = getMRESinkus(false,f,p,handles.sliceWindow);
         filename = [p '../RAW/' strtok(f,'.') '.nii'];
@@ -344,22 +346,49 @@ switch index
         handles.images{i}.phase = phase;
         handles.activeImg = phase(:,:,:,:,1);
         set(handles.dirBtnGrp,'Visible','on');
+    case 3 % NIFTI
+        im = load_untouch_nii([p f]);
+        mag = im.img;
+        phase = []; 
+        [nX,nY,nSlices,nPhases,nDirs] = size(mag);
+        handles.images{i}.mag = mag;
+        handles.images{i}.phase = phase;
+        handles.activeImg = mag(:,:,:,:);
+        set(handles.dirBtnGrp,'Visible','off');
+        set(handles.magToggle,'Visible','off');
 end
 
-statusMsg(handles,'Setting up workspace...');
+if index==1 || index==2
+    statusMsg(handles,'Setting up workspace...');
 
-p = handles.phaseSelect;
-s = handles.sliceSelect;
-set(s,'Min',1), set(s,'Max',nSlices), set(s, 'Value',1);
-set(p,'Min',1), set(p,'Max',nPhases), set(p, 'Value',1);
-set(s, 'SliderStep', [1 1]/(nSlices-1));
-set(p, 'SliderStep', [1 1]/(nPhases-1));
+    p = handles.phaseSelect;
+    s = handles.sliceSelect;
+    set(s,'Min',1), set(s,'Max',nSlices), set(s, 'Value',1);
+    set(p,'Min',1), set(p,'Max',nPhases), set(p, 'Value',1);
+    set(s, 'SliderStep', [1 1]/max((nSlices-1),1));
+    set(p, 'SliderStep', [1 1]/max((nPhases-1),1));
 
-guidata(hObject,handles);
-set(handles.magToggle,'SelectedObject',handles.phaseBtn);
-updateCAxis(handles);
-redraw(handles);
-statusMsg(handles,'Image loaded')
+    guidata(hObject,handles);
+    set(handles.magToggle,'SelectedObject',handles.phaseBtn);
+    updateCAxis(handles);
+    redraw(handles);
+    statusMsg(handles,'Image loaded')
+else
+    statusMsg(handles,'Setting up workspace...');
+
+    p = handles.phaseSelect;
+    s = handles.sliceSelect;
+    set(s,'Min',1), set(s,'Max',nSlices), set(s, 'Value',1);
+    set(p,'Min',1), set(p,'Max',nPhases), set(p, 'Value',1);
+    set(s, 'SliderStep', [1 1]/max((nSlices-1),1));
+    set(p, 'SliderStep', [1 1]/max((nPhases-1),1));
+
+    set(handles.magToggle,'SelectedObject',handles.magBtn);
+    guidata(hObject,handles);
+    updateCAxis(handles);
+    redraw(handles);
+    statusMsg(handles,'Image loaded')
+end
 
 % --------------------------------------------------------------------
 function saveMovie_Callback(hObject, eventdata, handles)
@@ -435,13 +464,11 @@ switch get(handles.magToggle,'SelectedObject')
         m = abs(handles.images{i}.phase);
 end
 
-while numel(m) > 1
-    m = max(m);
-end
+m=max(m(:));
 
 set(handles.cAxis,'Value',0);
 set(handles.cAxis,'Max',1.5*m);
-set(handles.cAxis,'Value',0.75*m);
+set(handles.cAxis,'Value',0.5*m);
 
 
 % --- Executes on button press in helpBtn.

@@ -58,6 +58,8 @@ handles.M = [];
 pt = [1,1,1,1];
 handles.pt = pt;
 handles.volume = 1;
+handles.cut = {[],[],[]};
+handles.ptSelect =1;
 
 % Update handles structure
 guidata(hObject, handles);
@@ -85,15 +87,18 @@ function openButton_Callback(hObject, eventdata, handles)
 [M,~] = getRawMRE();
 handles.M = M;
 
-% Set volume select ion slider properties based on number of volumes
+% Set volume selection slider properties based on number of volumes
 % detected
 dims = size(M);
 set(handles.volumeSelect,'Max',dims(4));
 set(handles.volumeSelect,'Min',1)
 set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
-
-update_Axes(hObject,handles);
+pt = round(dims/2);
+set(handles.volumeSelect,'Value',pt(4));
+handles.pt = pt;
 guidata(hObject, handles);
+update_Axes(hObject,handles);
+
 
 % --- Executes on button press in calculateButton.
 function calculateButton_Callback(hObject, eventdata, handles)
@@ -109,17 +114,22 @@ function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % hObject    handle to axes1 (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% XZ plane - transposed so Z is up
+% XZ plane
 newpt = get(hObject,'CurrentPoint');
 p = handles.figure1;
-disp(newpt);
-
+oldpt = handles.pt;
 switch get(p,'SelectionType')
   case 'normal'%left mouse button click
-    oldpt = handles.pt;
-    handles.pt = round([newpt(1),oldpt(2),newpt(2),oldpt(4)]);   
-  case 'alternate'
-    % TODO add zero on right click
+    handles.pt = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);   
+  case 'alt'%right mouse button click
+    fprintf(2,'right click\n')
+    if handles.ptSelect==1,
+      handles.cut{1} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
+      handles.ptSelect=2;
+    else
+      handles.cut{2} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
+      handles.ptSelect=1;
+    end   
 end
 guidata(hObject, handles);
 update_Axes(hObject,handles);
@@ -133,12 +143,20 @@ function axes2_ButtonDownFcn(hObject, eventdata, handles)
 % XY Plane
 newpt = get(hObject,'CurrentPoint');
 p = handles.figure1;
-disp(newpt);
-
+oldpt = handles.pt;
 switch get(p,'SelectionType')
   case 'normal'%left mouse button click
-    oldpt = handles.pt;
-    handles.pt = round([newpt(1),newpt(2),oldpt(3),oldpt(4)]);   
+    
+    handles.pt = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);   
+  case 'alt'%right mouse button click
+    fprintf(2,'right click\n')
+    if handles.ptSelect==1,
+      handles.cut{1} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
+      handles.ptSelect=2;
+    else
+      handles.cut{2} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
+      handles.ptSelect=1;
+    end   
 end
 guidata(hObject, handles);
 update_Axes(hObject,handles);
@@ -152,12 +170,19 @@ function axes3_ButtonDownFcn(hObject, eventdata, handles)
 % YZ Plane, transposed so Z is up
 newpt = get(hObject,'CurrentPoint');
 p = handles.figure1;
-disp(newpt);
-
+oldpt = handles.pt;
 switch get(p,'SelectionType')
   case 'normal'%left mouse button click
-    oldpt = handles.pt;
-    handles.pt = round([oldpt(1),newpt(1),newpt(2),oldpt(4)]);   
+        handles.pt = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);   
+  case 'alt'%right mouse button click
+    fprintf(2,'right click\n')
+    if handles.ptSelect==1,
+      handles.cut{1} = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);
+      handles.ptSelect=2;
+    else
+      handles.cut{2} = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);
+      handles.ptSelect=1;
+    end 
 end
 guidata(hObject, handles);
 update_Axes(hObject,handles);
@@ -167,12 +192,26 @@ function update_Axes(hObject,handles)
 f = [handles.axes1,handles.axes2,handles.axes3];
 M = handles.M;
 pt = handles.pt;
-v = handles.volume;
 colormap jet
+
+% Check for active cut and set values to 0 along the cut line
+c = handles.cut;
+if ~isempty(c{1}) && ~isempty(c{2}) 
+  M(min(c{1}(1),c{2}(1)) : max(c{1}(1),c{2}(1)),...
+    min(c{1}(2),c{2}(2)) : max(c{1}(2),c{2}(2)),...
+    min(c{1}(3),c{2}(3)) : max(c{1}(3),c{2}(3)),...
+    c{1}(4)) = 0;
+  handles.cut = {[],[],[]};
+  handles.M = M;
+  guidata(hObject,handles)
+end
+
+imagesc(transpose(squeeze(M(:,pt(2),:,pt(4)))),'Parent',f(1),'HitTest','off');
 axis tight
-imagesc(squeeze(M(:,pt(2),:,v)),'Parent',f(1),'HitTest','off');
-imagesc(squeeze(M(:,:,pt(3),v)),'Parent',f(2),'HitTest','off');
-imagesc(squeeze(M(pt(1),:,:,v)),'Parent',f(3),'HitTest','off');
+imagesc(squeeze(M(:,:,pt(3),pt(4))),'Parent',f(2),'HitTest','off');
+axis tight
+imagesc(transpose(squeeze(M(pt(1),:,:,pt(4)))),'Parent',f(3),'HitTest','off');
+axis tight
 guidata(hObject,handles)
 
 
@@ -184,7 +223,8 @@ function volumeSelect_Callback(hObject, eventdata, handles)
 
 % Hints: get(hObject,'Value') returns position of slider
 %        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
-handles.volume = round(get(hObject,'Value'));
+v = round(get(hObject,'Value'));
+handles.pt(4) = v;
 guidata(hObject,handles)
 update_Axes(hObject,handles)
 

@@ -24,7 +24,9 @@ function [mag, phase] = getRawMRE()
 [f p index] = uigetfile({...
     '*.dicom','DICOM MRE image';...
     '*.dicom','DICOM Motion-encoded MRE image';...
-    '*.nii',  'NIFTI image'});
+    '*.nii',  'NIFTI image';
+    '*.nii.gz','NIFTI Archive'});
+
 
 switch index
   case 1 % MRE Image
@@ -32,6 +34,8 @@ switch index
   case 2 % Motion-sensitized MRE image
     [mag,phase] = readDICOM5D(p,f);
   case 3 % NIFTI Image
+    [mag,phase] = readNIFTI(p,f);
+  case 4 % NIFTI Image
     [mag,phase] = readNIFTI(p,f);
 end
 
@@ -91,8 +95,25 @@ function [mag,phase] = readDICOM5D(p,f)
 
   
 function [mag, phase] = readNIFTI(p,f)
+% Load a NIFTI file (.nii) or archive (.nii.gz).
+% Depends on the NIFTI toolbox for MATLAB.
+% See also [1],[2] in the index comments at the end of the file
+
   im = load_untouch_nii([p f]);
-  mag = im.img;
+  header = im.hdr;
+  % By default `load_untouch_nii` creates a 3D matrix, but the image may
+  % contain multiple volumes appended back-to-back in the 3rd dimension.
+  % Check number of volumes and separate these in the 4th dimension.
+  % [x,y,t] -> [x,y,z,volume] 
+  % See [2] in the index
+  nX = header.dime.dim(2);
+  nY = header.dime.dim(3);
+  nVolumes = header.dime.dim(5);
+  nSlices = header.dime.dim(4);
+  mag = zeros(nX,nY,nSlices,nVolumes);
+  for i = 1:nVolumes
+    mag(:,:,:,i) = im.img(:,:,((i-1)*nSlices+1):i*nSlices);
+  end
   phase = [];
 
 
@@ -104,3 +125,21 @@ function [nii_file, fileLocation] = lunii(openText,fileLocation)
       fileLocation = [p f];
   end
   nii_file = load_untouch_nii(fileLocation);
+  
+  
+%----------------------------------INDEX----------------------------------%
+%
+% [1] http://brainder.org/2012/09/23/the-nifti-file-format/
+%
+% [2] Information on NIFTI dimension field from [1]:
+% The field short dim[8] contains the size of the image array. The first
+% element (dim[0]) contains the number of dimensions (1-7). If dim[0] is
+% not in this interval, the data is assumed to have opposite endianness and
+% so, should be byte-swapped (the nifti standard does not specify a
+% specific field for endianness, but encourages the use of dim[0] for this
+% purpose. The dimensions 1, 2 and 3 are assumed to refer to space (x, y,
+% z), the 4th dimension is assumed to refer to time, and the remaining
+% dimensions, 5, 6 and 7, can be anything else. The value dim[i] is a
+% positive integer representing the length of the i-th dimension.
+
+  

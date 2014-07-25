@@ -1,9 +1,16 @@
 function P = unwrapper(M,P)
 % Unwrap the phase of a multidimensional MRE image.
-% M is the magnitude image
-% P is the phase image (-pi,pi)
-% If either M or P are empty ([]), create using getRawMRE.
+%
+% Inputs:
+%   M:  magnitude image
+%   P:  phase image (-pi,pi)
+%   If either M or P are empty ([]), create using getRawMRE.
+%
+% Outputs:
+%   P:  unwrapped phase image
+%
 % See also getRawMRE
+ 
   %--Config--%
   verbose=0; % Toggle debugging flags
   
