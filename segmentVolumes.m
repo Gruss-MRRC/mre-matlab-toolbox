@@ -58,7 +58,7 @@ handles.M = [];
 pt = [1,1,1,1];
 handles.pt = pt;
 handles.volume = 1;
-handles.cut = {[],[],[]};
+handles.cut = {[],[],[],[]};
 handles.ptSelect =1;
 
 % Update handles structure
@@ -103,23 +103,27 @@ update_Axes(hObject,handles);
 % --- Executes on button press in calculateButton.
 function calculateButton_Callback(hObject, eventdata, handles)
 
-% TODO Add volume calculation functions
 M = handles.M;
 d = size(M);
-L = bwlabeln(M(:,:,:,2));
-L(L(:)==0) = NaN;
-disp('<Volume Histogram>')
-histc(L(:),0:max(L(:)))
-disp('</Volume Histogram>')
+L = labelmatrix(bwconncomp(M(:,:,:,2)));
+L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
+% disp('<Volume Histogram>')
+% group_histogram = histc(L(:),0:max(L(:)))
+% [~,index] = max(group_histogram);
+% disp('</Volume Histogram>')
 Lslice = L(:,:,round(d(3)*2/3));
 h = figure; 
 colormap jet
-imagesc(Lslice)
+imagesc(Lslice,[0 10]) % TODO don't hardcode the scale
 coords = round(ginput(h));
 val = Lslice(coords(2),coords(1));
 volume = sum(L(:)==val);
-msgbox(sprintf('Volume of selected region: %g mL',volume/1000))
 close(h)
+msgbox(sprintf('Volume of selected region: %g mL',volume/1000))
+% bwselect();
+
+
+
 
 
 % --- Executes on mouse press over axes background.
@@ -136,13 +140,13 @@ switch get(p,'SelectionType')
     handles.pt = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
     fprintf(2,'right click\n')
-    if handles.ptSelect==1,
-      handles.cut{1} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
-      handles.ptSelect=2;
+    i = handles.ptSelect;
+    handles.cut{i} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
+    if handles.ptSelect<4
+      handles.ptSelect=handles.ptSelect+1; 
     else
-      handles.cut{2} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
       handles.ptSelect=1;
-    end   
+    end
 end
 guidata(hObject, handles);
 update_Axes(hObject,handles);
@@ -163,13 +167,13 @@ switch get(p,'SelectionType')
     handles.pt = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
     fprintf(2,'right click\n')
-    if handles.ptSelect==1,
-      handles.cut{1} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
-      handles.ptSelect=2;
+    i = handles.ptSelect;
+    handles.cut{i} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
+    if handles.ptSelect<4
+      handles.ptSelect=handles.ptSelect+1; 
     else
-      handles.cut{2} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
       handles.ptSelect=1;
-    end   
+    end
 end
 guidata(hObject, handles);
 update_Axes(hObject,handles);
@@ -189,13 +193,13 @@ switch get(p,'SelectionType')
         handles.pt = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
     fprintf(2,'right click\n')
-    if handles.ptSelect==1,
-      handles.cut{1} = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);
-      handles.ptSelect=2;
+    i = handles.ptSelect,4;
+    handles.cut{i} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
+    if handles.ptSelect<4
+      handles.ptSelect=handles.ptSelect+1; 
     else
-      handles.cut{2} = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);
       handles.ptSelect=1;
-    end 
+    end
 end
 guidata(hObject, handles);
 update_Axes(hObject,handles);
@@ -209,12 +213,12 @@ colormap gray
 axis tight
 % Check for active cut and set values to 0 along the cut line
 c = handles.cut;
-if ~isempty(c{1}) && ~isempty(c{2}) 
-  M(min(c{1}(1),c{2}(1)) : max(c{1}(1),c{2}(1)),...
-    min(c{1}(2),c{2}(2)) : max(c{1}(2),c{2}(2)),...
-    min(c{1}(3),c{2}(3)) : max(c{1}(3),c{2}(3)),...
+if ~isempty(c{1}) && ~isempty(c{2}) && ~isempty(c{3}) && ~isempty(c{4}) 
+  M(min([c{1}(1),c{2}(1),c{3}(1),c{4}(1)]) : max([c{1}(1),c{2}(1),c{3}(1),c{4}(1)]),...
+    min([c{1}(2),c{2}(2),c{3}(2),c{4}(2)]) : max([c{1}(2),c{2}(2),c{3}(2),c{4}(2)]),...
+    min([c{1}(3),c{2}(3),c{3}(3),c{4}(3)]) : max([c{1}(3),c{2}(3),c{3}(3),c{4}(3)]),...
     c{1}(4)) = 0;
-  handles.cut = {[],[],[]};
+  handles.cut = {[],[],[],[]};
   handles.M = M;
   guidata(hObject,handles)
 end
