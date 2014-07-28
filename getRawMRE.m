@@ -4,8 +4,8 @@ function [mag, phase] = getRawMRE()
 % arrays.
 %   
 % Outputs:
-%   im_mag:    4- or 5-D Matrix (x,y,z-slice,phase,[direction])
-%   im_phase:  4- or 5-D Matrix (x,y,z-slice,phase,[direction])
+%   mag:    4- or 5-D Matrix (x,y,z-slice,phase,[direction])
+%   phase:  4- or 5-D Matrix (x,y,z-slice,phase,[direction])
 %
 % Dependencies:
 %   (+) NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
@@ -13,7 +13,7 @@ function [mag, phase] = getRawMRE()
 %   (*) dcmdump: /gmrrc/mrbin/dcmdump
 %   (*) GNU core utils
 %    *  Optional, but faster than using MATLAB's DICOM toolbox for metadata
-%    +  Required for 5D DICOM processing
+%    +  Required for 5D DICOM and NIFTI processing
 %
 % Authors:
 %   Mark Wagshul <mark.wagshul@einstein.yu.edu>

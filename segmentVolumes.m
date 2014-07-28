@@ -102,11 +102,24 @@ update_Axes(hObject,handles);
 
 % --- Executes on button press in calculateButton.
 function calculateButton_Callback(hObject, eventdata, handles)
-% hObject    handle to calculateButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 
 % TODO Add volume calculation functions
+M = handles.M;
+d = size(M);
+L = bwlabeln(M(:,:,:,2));
+L(L(:)==0) = NaN;
+disp('<Volume Histogram>')
+histc(L(:),0:max(L(:)))
+disp('</Volume Histogram>')
+Lslice = L(:,:,round(d(3)*2/3));
+h = figure; 
+colormap jet
+imagesc(Lslice)
+coords = round(ginput(h));
+val = Lslice(coords(2),coords(1));
+volume = sum(L(:)==val);
+msgbox(sprintf('Volume of selected region: %g mL',volume/1000))
+close(h)
 
 
 % --- Executes on mouse press over axes background.
@@ -192,8 +205,8 @@ function update_Axes(hObject,handles)
 f = [handles.axes1,handles.axes2,handles.axes3];
 M = handles.M;
 pt = handles.pt;
-colormap jet
-
+colormap gray
+axis tight
 % Check for active cut and set values to 0 along the cut line
 c = handles.cut;
 if ~isempty(c{1}) && ~isempty(c{2}) 
@@ -205,13 +218,10 @@ if ~isempty(c{1}) && ~isempty(c{2})
   handles.M = M;
   guidata(hObject,handles)
 end
-
 imagesc(transpose(squeeze(M(:,pt(2),:,pt(4)))),'Parent',f(1),'HitTest','off');
-axis tight
 imagesc(squeeze(M(:,:,pt(3),pt(4))),'Parent',f(2),'HitTest','off');
-axis tight
 imagesc(transpose(squeeze(M(pt(1),:,:,pt(4)))),'Parent',f(3),'HitTest','off');
-axis tight
+for i=1:3, axis(f(i),'tight'); end
 guidata(hObject,handles)
 
 
