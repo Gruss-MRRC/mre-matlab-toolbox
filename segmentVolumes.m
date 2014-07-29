@@ -98,6 +98,24 @@ set(handles.volumeSelect,'Value',pt(4));
 handles.pt = pt;
 guidata(hObject, handles);
 update_Axes(hObject,handles);
+% 3D image
+figure
+D = M(65:end,:,:,1);
+Ds = smooth3(D);
+hiso = patch(isosurface(Ds,5),...
+	'FaceColor',[.5,.5,.8],...
+	'EdgeColor','none');
+	isonormals(Ds,hiso)
+hcap = patch(isocaps(D,5),...
+	'FaceColor','interp',...
+	'EdgeColor','none');
+view(35,30) 
+axis tight 
+daspect([1,1,1])
+lightangle(90,0);
+set(gcf,'Renderer','zbuffer'); lighting phong
+set(hcap,'AmbientStrength',1)
+set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
 
 % --- Executes on button press in calculateButton.
@@ -118,20 +136,33 @@ imagesc(Lslice,[0 10]) % TODO don't hardcode the scale
 coords = round(ginput(h));
 val = Lslice(coords(2),coords(1));
 volume = sum(L(:)==val);
-close(h)
+% close(h)
 msgbox(sprintf('Volume of selected region: %g mL',volume/1000))
+Z = L==val;
+figure(h)
+D = M(:,:,:,1).*Z;
+Ds = smooth3(D);
+hiso = patch(isosurface(Ds,5),...
+	'FaceColor',[.5,.5,.8],...
+	'EdgeColor','none');
+	isonormals(Ds,hiso)
+hcap = patch(isocaps(D,5),...
+	'FaceColor','interp',...
+	'EdgeColor','none');
+view(35,30) 
+axis tight 
+daspect([1,1,1])
+lightangle(90,0);
+set(gcf,'Renderer','zbuffer'); lighting phong
+set(hcap,'AmbientStrength',1)
+set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 % bwselect();
-
-
 
 
 
 % --- Executes on mouse press over axes background.
 function axes1_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to axes1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% XZ plane
+% Coronal (XZ) plane
 newpt = get(hObject,'CurrentPoint');
 p = handles.figure1;
 oldpt = handles.pt;
@@ -154,10 +185,7 @@ update_Axes(hObject,handles);
 
 % --- Executes on mouse press over axes background.
 function axes2_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to axes1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% XY Plane
+% Axial (XY) Plane
 newpt = get(hObject,'CurrentPoint');
 p = handles.figure1;
 oldpt = handles.pt;
@@ -181,10 +209,7 @@ update_Axes(hObject,handles);
 
 % --- Executes on mouse press over axes background.
 function axes3_ButtonDownFcn(hObject, eventdata, handles)
-% hObject    handle to axes1 (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-% YZ Plane, transposed so Z is up
+% Sagittal (YZ) Plane, transposed so Z is up
 newpt = get(hObject,'CurrentPoint');
 p = handles.figure1;
 oldpt = handles.pt;
@@ -193,9 +218,9 @@ switch get(p,'SelectionType')
         handles.pt = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
     fprintf(2,'right click\n')
-    i = handles.ptSelect,4;
-    handles.cut{i} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
-    if handles.ptSelect<4
+    i = handles.ptSelect;
+    handles.cut{i} = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);
+    if handles.ptSelect<5
       handles.ptSelect=handles.ptSelect+1; 
     else
       handles.ptSelect=1;
@@ -213,10 +238,17 @@ colormap gray
 axis tight
 % Check for active cut and set values to 0 along the cut line
 c = handles.cut;
-if ~isempty(c{1}) && ~isempty(c{2}) && ~isempty(c{3}) && ~isempty(c{4}) 
-  M(min([c{1}(1),c{2}(1),c{3}(1),c{4}(1)]) : max([c{1}(1),c{2}(1),c{3}(1),c{4}(1)]),...
-    min([c{1}(2),c{2}(2),c{3}(2),c{4}(2)]) : max([c{1}(2),c{2}(2),c{3}(2),c{4}(2)]),...
-    min([c{1}(3),c{2}(3),c{3}(3),c{4}(3)]) : max([c{1}(3),c{2}(3),c{3}(3),c{4}(3)]),...
+% for i = 1:3
+%   if ~isempty(c{i})
+%     plot(f(1),c{i}(1),c{i}(3),'y*')
+%     plot(f(2),c{i}(1),c{i}(2),'y*')
+%     plot(f(3),c{i}(2),c{i}(3),'y*')
+%   end
+% end
+if ~isempty(c{1}) && ~isempty(c{2}) && ~isempty(c{3}) && ~isempty(c{4})
+  M(min([c{3}(1),c{4}(1)]) : max([c{3}(1),c{4}(1)]),... % X extent
+    min([c{1}(2),c{2}(2)]) : max([c{1}(2),c{2}(2)]),... % Y extent
+    min([c{1}(3),c{2}(3)]) : max([c{1}(3),c{2}(3)]),... % Z extent
     c{1}(4)) = 0;
   handles.cut = {[],[],[],[]};
   handles.M = M;
