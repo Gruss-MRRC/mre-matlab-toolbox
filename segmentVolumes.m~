@@ -96,7 +96,7 @@ set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
 pt = round(dims/2);
 set(handles.volumeSelect,'Value',pt(4));
 handles.pt = pt;
-statusMsg(handles,'Ready')
+statusMsg(handles,'Opened %s',
 guidata(hObject, handles);
 update_Axes(hObject,handles);
 % 3D image
