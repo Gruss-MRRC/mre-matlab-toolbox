@@ -1,28 +1,18 @@
 function varargout = segmentVolumes(varargin)
-% SEGMENTVOLUMES MATLAB code for segmentVolumes.fig
-%      SEGMENTVOLUMES, by itself, creates a new SEGMENTVOLUMES or raises the existing
-%      singleton*.
+% SEGMENTVOLUMES Isolate and calculate volume of structures in MRI images.
+% Open an interactive GUI to place cuts and perform segmentation of volumes
+% in an MRI sequence. The intended use is to calculate the volume of the
+% ventricles in the human brain using T1 MRI images.
 %
-%      H = SEGMENTVOLUMES returns the handle to a new SEGMENTVOLUMES or the handle to
-%      the existing singleton*.
+% Dependencies:
+% MRI2MAT: Convert NIFTI and DICOM images to matrix format
+% GUIDE:   GUI created using GUIDE toolbox
 %
-%      SEGMENTVOLUMES('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in SEGMENTVOLUMES.M with the given input arguments.
-%
-%      SEGMENTVOLUMES('Property','Value',...) creates a new SEGMENTVOLUMES or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before segmentVolumes_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to segmentVolumes_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
+% See also: GUIDE, GUIDATA, GUIHANDLES, MRI2MAT
 
 % Edit the above text to modify the response to help segmentVolumes
 
-% Last Modified by GUIDE v2.5 30-Jul-2014 12:08:04
+% Last Modified by GUIDE v2.5 30-Jul-2014 14:53:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -96,12 +86,15 @@ set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
 pt = round(dims/2);
 set(handles.volumeSelect,'Value',pt(4));
 handles.pt = pt;
-statusMsg(handles,'Ready')
+statusMsg(handles,sprintf('%s %s',...
+  'Right-click twice in the sagittal plane to outline a cut,',...
+  'then twice in the coronal plane to set the width.'))
 guidata(hObject, handles);
 update_Axes(hObject,handles);
+
 % 3D image
 figure
-D = M(65:end,:,:,1);
+D = M(round(dims(1)/2):end,:,:,1); % split along sagittal plane
 Ds = smooth3(D);
 hiso = patch(isosurface(Ds,5),...
 	'FaceColor',[.5,.5,.8],...
@@ -312,3 +305,21 @@ function undoButton_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 handles.cut = {[],[],[],[]};
 statusMsg(handles,'Selection cleared.')
+guidata(hObject,handles)
+
+% --- Executes on key press with focus on segmentVolumes or any of its controls.
+function segmentVolumes_WindowKeyPressFcn(hObject, eventdata, handles)
+% hObject    handle to segmentVolumes (see GCBO)
+% eventdata  structure with the following fields (see FIGURE)
+%	Key: name of the key that was pressed, in lower case
+%	Character: character interpretation of the key(s) that was pressed
+%	Modifier: name(s) of the modifier key(s) (i.e., control, shift) pressed
+% handles    structure with handles and user data (see GUIDATA)
+switch eventdata.Key
+  case 'backspace'
+    p = handles.ptSelect;
+    handles.cut{p} = [];
+    handles.ptSelect = handles.ptSelect-1;
+    statusMsg(handles,'Undid click.')
+end
+guidata(hObject,handles)
