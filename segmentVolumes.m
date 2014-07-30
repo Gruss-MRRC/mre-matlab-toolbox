@@ -106,7 +106,7 @@ view(35,30)
 axis tight 
 daspect([1,1,1])
 lightangle(90,0);
-set(gcf,'Renderer','zbuffer'); lighting phong
+set(gcf,'Renderer','opengl'); lighting phong
 set(hcap,'AmbientStrength',1)
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
@@ -142,15 +142,11 @@ hiso = patch(isosurface(Ds,5),...
 	'FaceColor',[.5,.5,.8],...
 	'EdgeColor','none');
 	isonormals(Ds,hiso)
-hcap = patch(isocaps(D,5),...
-	'FaceColor','interp',...
-	'EdgeColor','none');
 view(35,30) 
 axis tight 
 daspect([1,1,1])
 lightangle(90,0);
-set(gcf,'Renderer','zbuffer'); lighting phong
-set(hcap,'AmbientStrength',1)
+set(gcf,'Renderer','opengl'); lighting phong
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
 
