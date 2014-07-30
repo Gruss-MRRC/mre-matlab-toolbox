@@ -1,11 +1,9 @@
-function [mag, phase] = getRawMRE()
-
-% Extract data from imaging formats such as DICOM and NIFTI into MATLAB
-% arrays.
+function [mag, phase] = mri2mat()
+%MRI2MAT Convert NIFTI and DICOM images to matrix format.
 %   
 % Outputs:
-%   mag:    4- or 5-D Matrix (x,y,z-slice,phase,[direction])
-%   phase:  4- or 5-D Matrix (x,y,z-slice,phase,[direction])
+%   mag:    4 or 5-D Matrix (x,y,z-slice,phase,[direction])
+%   phase:  4 or 5-D Matrix (x,y,z-slice,phase,[direction])
 %
 % Dependencies:
 %   (+) NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI

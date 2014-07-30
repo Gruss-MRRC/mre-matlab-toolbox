@@ -14,7 +14,7 @@ function P = unwrapper(M,P)
   %--Config--%
   verbose=0; % Toggle debugging flags
   
-  if (isempty(P) || isempty(M)), [M,P] = getRawMRE(); end
+  if (isempty(P) || isempty(M)), [M,P] = mri2mat(); end
   P = mask(P,M,'minimum',180,NaN);
   [nX,nY,nSlices,nPhases,nDirs] = size(P);
   
