@@ -1,9 +1,9 @@
 function [mag, phase] = mri2mat()
-%MRI2MAT Convert NIFTI and DICOM images to matrix format.
+% Convert NIFTI and DICOM images to matrix format.
 %   
 % Outputs:
-%   mag:    4 or 5-D Matrix (x,y,z-slice,phase,[direction])
-%   phase:  4 or 5-D Matrix (x,y,z-slice,phase,[direction])
+%   mag:    4 or 5-D Matrix (x,y,slice,phase,[direction])
+%   phase:  4 or 5-D Matrix (x,y,slice,phase,[direction])
 %
 % Dependencies:
 %   (+) NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
@@ -24,8 +24,6 @@ function [mag, phase] = mri2mat()
     '*.dicom','DICOM Motion-encoded MRE image';...
     '*.nii',  'NIFTI image';
     '*.nii.gz','NIFTI Archive'});
-
-
 switch index
   case 1 % MRE Image
     [mag,phase] = readDICOM4D(p,f);
@@ -35,6 +33,10 @@ switch index
     [mag,phase] = readNIFTI(p,f);
   case 4 % NIFTI Image
     [mag,phase] = readNIFTI(p,f);
+end
+
+if(true) % Add flag for verbose output here if you want
+fprintf('Opened %s\n',f);
 end
 
 function [mag,phase] = readDICOM4D(p,f)

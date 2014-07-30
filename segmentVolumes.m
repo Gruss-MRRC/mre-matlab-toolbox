@@ -1,5 +1,6 @@
 function varargout = segmentVolumes(varargin)
 % SEGMENTVOLUMES Isolate and calculate volume of structures in MRI images.
+% 
 % Open an interactive GUI to place cuts and perform segmentation of volumes
 % in an MRI sequence. The intended use is to calculate the volume of the
 % ventricles in the human brain using T1 MRI images.
@@ -7,6 +8,9 @@ function varargout = segmentVolumes(varargin)
 % Dependencies:
 % MRI2MAT: Convert NIFTI and DICOM images to matrix format
 % GUIDE:   GUI created using GUIDE toolbox
+%
+% Author:
+% Alex Krolick <amk283@cornell.edu>
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES, MRI2MAT
 
@@ -58,7 +62,6 @@ guidata(hObject, handles);
 % uiwait(handles.segmentVolumes);
 
 
-% --- Outputs from this function are returned to the command line.
 function varargout = segmentVolumes_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
@@ -69,11 +72,7 @@ function varargout = segmentVolumes_OutputFcn(hObject, eventdata, handles)
 varargout{1} = handles.output;
 
 
-% --- Executes on button press in openButton.
 function openButton_Callback(hObject, eventdata, handles)
-% hObject    handle to openButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
 [M,~] = mri2mat();
 handles.M = M;
 
@@ -112,9 +111,7 @@ set(hcap,'AmbientStrength',1)
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
 
-% --- Executes on button press in calculateButton.
 function calculateButton_Callback(hObject, eventdata, handles)
-
 M = handles.M;
 d = size(M);
 L = labelmatrix(bwconncomp(M(:,:,:,2)));
@@ -123,15 +120,20 @@ L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 % group_histogram = histc(L(:),0:max(L(:)))
 % [~,index] = max(group_histogram);
 % disp('</Volume Histogram>')
-Lslice = L(:,:,round(d(3)*2/3));
+Lslice = L(:,:,handles.pt(3));
 h = figure; 
 colormap jet
 imagesc(Lslice,[0 10]) % TODO don't hardcode the scale
 coords = round(ginput(h));
 val = Lslice(coords(2),coords(1));
 volume = sum(L(:)==val);
-% close(h)
-msgbox(sprintf('Volume of selected region: %g mL',volume/1000))
+
+%Display volume
+volumeMsg = sprintf('Volume of selected region: %g mL',volume/1000);
+statusMsg(handles,volumeMsg);
+fprintf([volumeMsg '\n']);
+
+%3D image of selected region
 Z = L==val;
 figure(h)
 D = M(:,:,:,1).*Z;
@@ -150,11 +152,9 @@ lightangle(90,0);
 set(gcf,'Renderer','zbuffer'); lighting phong
 set(hcap,'AmbientStrength',1)
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
-% bwselect();
 
 
 
-% --- Executes on mouse press over axes background.
 function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % Coronal (XZ) plane
 newpt = get(hObject,'CurrentPoint');
@@ -164,7 +164,6 @@ switch get(p,'SelectionType')
   case 'normal'%left mouse button click
     handles.pt = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
-    fprintf(2,'right click\n')
     i = handles.ptSelect;
     handles.cut{i} = round([newpt(1),oldpt(2),newpt(3),oldpt(4)]);
     if handles.ptSelect<4
@@ -177,7 +176,6 @@ guidata(hObject, handles);
 update_Axes(hObject,handles);
 
 
-% --- Executes on mouse press over axes background.
 function axes2_ButtonDownFcn(hObject, eventdata, handles)
 % Axial (XY) Plane
 newpt = get(hObject,'CurrentPoint');
@@ -188,7 +186,6 @@ switch get(p,'SelectionType')
     
     handles.pt = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
-    fprintf(2,'right click\n')
     i = handles.ptSelect;
     handles.cut{i} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
     if handles.ptSelect<4
@@ -201,7 +198,6 @@ guidata(hObject, handles);
 update_Axes(hObject,handles);
 
 
-% --- Executes on mouse press over axes background.
 function axes3_ButtonDownFcn(hObject, eventdata, handles)
 % Sagittal (YZ) Plane, transposed so Z is up
 newpt = get(hObject,'CurrentPoint');
@@ -211,7 +207,6 @@ switch get(p,'SelectionType')
   case 'normal'%left mouse button click
         handles.pt = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
-    fprintf(2,'right click\n')
     i = handles.ptSelect;
     handles.cut{i} = round([oldpt(1),newpt(1),newpt(3),oldpt(4)]);
     if handles.ptSelect<5
@@ -230,15 +225,9 @@ M = handles.M;
 pt = handles.pt;
 colormap gray
 axis tight
-% Check for active cut and set values to 0 along the cut line
+
+% Cut out the selected region if selection is complete
 c = handles.cut;
-% for i = 1:3
-%   if ~isempty(c{i})
-%     plot(f(1),c{i}(1),c{i}(3),'y*')
-%     plot(f(2),c{i}(1),c{i}(2),'y*')
-%     plot(f(3),c{i}(2),c{i}(3),'y*')
-%   end
-% end
 if ~isempty(c{1}) && ~isempty(c{2}) && ~isempty(c{3}) && ~isempty(c{4})
   M(min([c{3}(1),c{4}(1)]) : max([c{3}(1),c{4}(1)]),... % X extent
     min([c{1}(2),c{2}(2)]) : max([c{1}(2),c{2}(2)]),... % Y extent
@@ -256,14 +245,7 @@ updateCoords(handles)
 guidata(hObject,handles)
 
 
-% --- Executes on slider movement.
 function volumeSelect_Callback(hObject, eventdata, handles)
-% hObject    handle to volumeSelect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-
-% Hints: get(hObject,'Value') returns position of slider
-%        get(hObject,'Min') and get(hObject,'Max') to determine range of slider
 v = round(get(hObject,'Value'));
 handles.pt(4) = v;
 statusMsg(handles,sprintf('Changed to volume %g',v))
@@ -271,12 +253,7 @@ guidata(hObject,handles)
 update_Axes(hObject,handles)
 
 
-% --- Executes during object creation, after setting all properties.
 function volumeSelect_CreateFcn(hObject, eventdata, handles)
-% hObject    handle to volumeSelect (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    empty - handles not created until after all CreateFcns called
-
 % Hint: slider controls usually have a light gray background.
 if isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor',[.9 .9 .9]);
@@ -288,8 +265,9 @@ function statusMsg(handles,msg)
 set(handles.statusBar,'String',msg);
 pause(.01)
 
+
 function updateCoords(handles)
-% Sets status bar text
+% Displays coordinate values based on the current view
 h= handles;
 x = h.pt(1);
 y = h.pt(2);
@@ -298,16 +276,15 @@ set(h.coords,'String',...
   sprintf('%g,%g,%g',x,y,z));
 pause(.01)
 
-% --- Executes on button press in undoButton.
+
 function undoButton_Callback(hObject, eventdata, handles)
-% hObject    handle to undoButton (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
+% Reset the cut selection and selection counter
 handles.cut = {[],[],[],[]};
 statusMsg(handles,'Selection cleared.')
+handles.ptSelect=1;
 guidata(hObject,handles)
 
-% --- Executes on key press with focus on segmentVolumes or any of its controls.
+
 function segmentVolumes_WindowKeyPressFcn(hObject, eventdata, handles)
 % hObject    handle to segmentVolumes (see GCBO)
 % eventdata  structure with the following fields (see FIGURE)
