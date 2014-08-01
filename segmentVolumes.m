@@ -73,18 +73,20 @@ varargout{1} = handles.output;
 
 
 function openButton_Callback(hObject, eventdata, handles)
-[M,~] = mri2mat();
+[M,~,header] = mri2mat();
 handles.M = M;
 
 % Set volume selection slider properties based on number of volumes
 % detected
 dims = size(M);
-set(handles.volumeSelect,'Max',dims(4));
+if length(dims)==3, dims(4)=1; end % pad dims if only 3D
+set(handles.volumeSelect,'Max',dims(4)+.01);
 set(handles.volumeSelect,'Min',1)
 set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
-pt = round(dims/2);
+pt = ceil(dims/2);
 set(handles.volumeSelect,'Value',pt(4));
 handles.pt = pt;
+handles.header = header;
 statusMsg(handles,sprintf('%s %s',...
   'Right-click twice in the sagittal plane to outline a cut,',...
   'then twice in the coronal plane to set the width.'))
@@ -112,9 +114,13 @@ set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
 
 function calculateButton_Callback(hObject, eventdata, handles)
+% Ask user to select which subvolume they want to calculate, then calculate
+% volume and display a 3D image of the region
+
+% Region selection
 M = handles.M;
-d = size(M);
-L = labelmatrix(bwconncomp(M(:,:,:,2)));
+v = get(handles.volumeSelect,'Value');
+L = labelmatrix(bwconncomp(M(:,:,:,v)));
 L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 % disp('<Volume Histogram>')
 % group_histogram = histc(L(:),0:max(L(:)))
@@ -123,17 +129,22 @@ L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 Lslice = L(:,:,handles.pt(3));
 h = figure; 
 colormap jet
-imagesc(Lslice,[0 10]) % TODO don't hardcode the scale
+imagesc(Lslice,[0 10]) % TODO don't hardcode the color axis
 coords = round(ginput(h));
 val = Lslice(coords(2),coords(1));
-volume = sum(L(:)==val);
 
-%Display volume
-volumeMsg = sprintf('Volume of selected region: %g mL',volume/1000);
+% Volume calculation
+[space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
+pixdim = header.dime.pixdim(2:4); % voxel dimensions in real units
+voxels = sum(L(:)==val); 
+volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % cubic meters
+
+% Display volume
+volumeMsg = sprintf('Volume of selected region: %g mL',volume*1E6); % m^3 -> mL
 statusMsg(handles,volumeMsg);
 fprintf([volumeMsg '\n']);
 
-%3D image of selected region
+% 3D image of selected region
 Z = L==val;
 figure(h)
 D = M(:,:,:,1).*Z;
@@ -148,6 +159,25 @@ daspect([1,1,1])
 lightangle(90,0);
 set(gcf,'Renderer','opengl'); lighting phong
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
+
+function [space_units,time_units] = nifti_units_lookup(code)
+% See the NIFTI specification: 
+% http://nifti.nimh.nih.gov/pub/dist/src/niftilib/nifti1.h
+% Bits 0-2 are spatial, 3-6 temporal, 7-8 unused
+code = dec2bin(code);
+space_code = bin2dec(code(end-2:end-0));
+time_code  = bin2dec(code(end-5,end-3));
+switch space_code
+  case '1', space_units = 1E0;  %meters
+  case '2', space_units = 1E-3; %millimeters
+  case '3', space_units = 1E-6; %micrometers
+end
+
+switch time_code
+  case '1', time_units = 1E0;  %seconds
+  case '2', time_units = 1E-3; %milliseconds
+  case '3', time_units = 1E-6; %microseconds
+end
 
 
 

@@ -4,7 +4,7 @@ function P = unwrapper(M,P)
 % Inputs:
 %   M:  magnitude image
 %   P:  phase image (-pi,pi)
-%   If either M or P are empty ([]), create using getRawMRE.
+%   If either M or P are empty ([]), create using mri2mat.
 %
 % Outputs:
 %   P:  unwrapped phase image
@@ -66,7 +66,7 @@ function show(M)
 % Display an image with display settings that make sense for MRI
   figure
   imagesc(M)
-  axis square
+  axis equal
   colormap gray
   
   

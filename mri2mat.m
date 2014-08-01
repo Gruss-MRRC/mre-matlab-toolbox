@@ -1,9 +1,13 @@
-function [mag, phase] = mri2mat()
+function [mag, phase, header] = mri2mat()
 % Convert NIFTI and DICOM images to matrix format.
+%
+% Inputs:
+%   .nii, .nii.gz, .dcm, .dicom files (specified interactively)
 %   
 % Outputs:
 %   mag:    4 or 5-D Matrix (x,y,slice,phase,[direction])
 %   phase:  4 or 5-D Matrix (x,y,slice,phase,[direction])
+%   header: structure containing metadata
 %
 % Dependencies:
 %   (+) NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
@@ -26,23 +30,23 @@ function [mag, phase] = mri2mat()
     '*.nii.gz','NIFTI Archive'});
 switch index
   case 1 % MRE Image
-    [mag,phase] = readDICOM4D(p,f);
+    [mag,phase,header] = readDICOM4D(p,f);
   case 2 % Motion-sensitized MRE image
-    [mag,phase] = readDICOM5D(p,f);
+    [mag,phase,header] = readDICOM5D(p,f);
   case 3 % NIFTI Image
-    [mag,phase] = readNIFTI(p,f);
-  case 4 % NIFTI Image
-    [mag,phase] = readNIFTI(p,f);
+    [mag,phase.header] = readNIFTI(p,f);
+  case 4 % NIFTI Archive
+    [mag,phase,header] = readNIFTI(p,f);
 end
 
 if(true) % Add flag for verbose output here if you want
 fprintf('Opened %s\n',f);
 end
 
-function [mag,phase] = readDICOM4D(p,f)
-  info = dicominfo([p f]);
-  nSlices = info.Private_2001_1018;
-  nPhases = info.Private_2001_1081;
+function [mag,phase,header] = readDICOM4D(p,f)
+  header = dicominfo([p f]);
+  nSlices = header.Private_2001_1018;
+  nPhases = header.Private_2001_1081;
   % Alternately, use dcmdump (only works on MRRC cluster):
   % [~,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
   % nSlices = str2num(result);
@@ -60,7 +64,7 @@ function [mag,phase] = readDICOM4D(p,f)
   phase = double(phase)*pi/2048-pi;
 
   
-function [mag,phase] = readDICOM5D(p,f)
+function [mag,phase,header] = readDICOM5D(p,f)
   filename = [p '../RAW/' strtok(f,'.') '.nii'];
   if exist(filename) > 0,
     im = lunii('Select nifti image',filename);
@@ -77,9 +81,42 @@ function [mag,phase] = readDICOM5D(p,f)
   end
   imBrain = imBrain.img;
   
-  info = dicominfo([p f]);
-  nSlices = info.Private_2001_1018;
-  nDirs   = info.Private_2001_1081;
+  header = dicominfo([p f]);
+  nSlices = header.Private_2001_1018;
+  nDirs   = header.Private_2001_1081;
+  % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+  % nDirs = str2num(result);
+  nPhases = size(im,4) / 2 / nDirs;
+  k1=1;
+  for dir = 1:nSlices, %nDirs
+    for ph = 1:nPhases,
+      mag(:,:,:,ph,dir) = im(:,:,:,k1).* int16(imBrain>0);
+      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1).* int16(imBrain>0);
+      k1 = k1 + 1;
+     end
+  end
+  phase = double(phase)*pi/2048-pi;
+  
+function [mag,phase,header] = readNIFTI5D(p,f)
+  filename = [p '../RAW/' strtok(f,'.') '.nii'];
+  if exist(filename) > 0,
+    im = lunii('Select nifti image',[p f]);
+  else
+    filename = [p '../RAW/' strtok(f,'.') '.nii.gz'];
+    im = lunii('Select nifti image',filename);
+  end
+  im = im.img;
+  brainFilename = [p '../RAW/' strtok(f,'.') 'Brain.nii.gz'];
+  if exist(brainFilename) > 0,
+    imBrain = lunii('Select NIFTI BET image',brainFilename);
+  else
+    imBrain = lunii('Select NIFTI BET image','');
+  end
+  imBrain = imBrain.img;
+  
+  header = dicominfo([p f]);
+  nSlices = header.Private_2001_1018;
+  nDirs   = header.Private_2001_1081;
   % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
   % nDirs = str2num(result);
   nPhases = size(im,4) / 2 / nDirs;
@@ -94,7 +131,7 @@ function [mag,phase] = readDICOM5D(p,f)
   phase = double(phase)*pi/2048-pi;
 
   
-function [mag, phase] = readNIFTI(p,f)
+function [mag, phase,header] = readNIFTI(p,f)
 % Load a NIFTI file (.nii) or archive (.nii.gz).
 % Depends on the NIFTI toolbox for MATLAB.
 % See also [1],[2] in the index comments at the end of the file
@@ -105,7 +142,7 @@ function [mag, phase] = readNIFTI(p,f)
   % contain multiple volumes appended back-to-back in the 3rd dimension.
   % Check number of volumes and separate these in the 4th dimension.
   % [x,y,t] -> [x,y,z,volume] 
-  % See [2] in the index
+  % See [1],[2] in the index
   nX = header.dime.dim(2);
   nY = header.dime.dim(3);
   nVolumes = header.dime.dim(5);
@@ -129,7 +166,7 @@ function [nii_file, fileLocation] = lunii(openText,fileLocation)
   
 %----------------------------------INDEX----------------------------------%
 %
-% [1] http://brainder.org/2012/09/23/the-nifti-file-format/
+% [1] http://brainder.org/2012/09/23/the-nifti-file-format
 %
 % [2] Information on NIFTI dimension field from [1]:
 % The field short dim[8] contains the size of the image array. The first

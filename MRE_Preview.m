@@ -1,24 +1,11 @@
 function varargout = MREAnalyser(varargin)
-% MREANALYSER MATLAB code for MREAnalyser.fig
-%      MREANALYSER, by itself, creates a new MREANALYSER or raises the existing
-%      singleton*.
+% MREANALYSER Preview and phase unwrap MRE sequences.
 %
-%      H = MREANALYSER returns the handle to a new MREANALYSER or the handle to
-%      the existing singleton*.
-%
-%      MREANALYSER('CALLBACK',hObject,eventData,handles,...) calls the local
-%      function named CALLBACK in MREANALYSER.M with the given input arguments.
-%
-%      MREANALYSER('Property','Value',...) creates a new MREANALYSER or raises the
-%      existing singleton*.  Starting from the left, property value pairs are
-%      applied to the GUI before MREAnalyser_OpeningFcn gets called.  An
-%      unrecognized property name or invalid value makes property application
-%      stop.  All inputs are passed to MREAnalyser_OpeningFcn via varargin.
-%
-%      *See GUI Options on GUIDE's Tools menu.  Choose "GUI allows only one
-%      instance to run (singleton)".
-%
-% See also: GUIDE, GUIDATA, GUIHANDLES
+% See also: GUIDE, GUIDATA, GUIHANDLES, UNWRAPPER, MRI2MAT
+% 
+% Authors:
+% Alex Krolick <amk283@cornell.edu>
+% Mark Wagshul <mark.wagshul@einstein.yu.edu>
 
 % Edit the above text to modify the response to help MREAnalyser
 
@@ -168,7 +155,7 @@ function sliceWindow_CreateFcn(hObject, eventdata, handles)
 % handles    empty - handles not created until after all CreateFcns called
 
 % Hint: place code in OpeningFcn to populate sliceWindow
-axis square;
+axis equal;
 
 % --- Executes during object creation, after setting all properties.
 function figure1_CreateFcn(hObject, eventdata, handles)
@@ -191,7 +178,7 @@ switch get(handles.magToggle,'SelectedObject')
 end
 imagesc(handles.activeImg(:,:,s,p),...
         'Parent',handles.sliceWindow);
-    axis square off;
+    axis equal off;
     box off;
     
     caxis(clim);
@@ -279,7 +266,7 @@ statusMsg(handles,'Opening...');
 [f p index] = uigetfile({...
     '*.dicom','DICOM MRE image';...
     '*.dicom','DICOM Motion-encoded MRE image';...
-    '*.nii',  'NIFTI image'});
+    '*.nii*',  'NIFTI image'});
 
 w = handles.sliceWindow;
 i = handles.curImg;
@@ -476,7 +463,8 @@ function helpBtn_Callback(hObject, eventdata, handles)
 % hObject    handle to helpBtn (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-msgbox('Contact Mark Wagshul <mark.wagshul@einstein.yu.edu> or Alex Krolick <amk283@cornell.edu>','Help')
+msgbox(['Contact Mark Wagshul <mark.wagshul@einstein.yu.edu> ',...
+  'or Alex Krolick <amk283@cornell.edu>'],'Help')
 
 
 % --- Executes when selected object is changed in dirBtnGrp.
