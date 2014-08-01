@@ -1,4 +1,4 @@
-function [mag, phase, header] = mri2mat()
+function [mag, phase, info] = mri2mat()
 % Convert NIFTI and DICOM images to matrix format.
 %
 % Inputs:
@@ -7,7 +7,7 @@ function [mag, phase, header] = mri2mat()
 % Outputs:
 %   mag:    4 or 5-D Matrix (x,y,slice,phase,[direction])
 %   phase:  4 or 5-D Matrix (x,y,slice,phase,[direction])
-%   header: structure containing metadata
+%   info:   structure containing metadata about the file
 %
 % Dependencies:
 %   (+) NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
@@ -21,7 +21,7 @@ function [mag, phase, header] = mri2mat()
 %   Mark Wagshul <mark.wagshul@einstein.yu.edu>
 %   Alex Krolick <amk283@cornell.edu>
 %
-% See also getMRESinkus, MREAnalyser
+% See also getMRESinkus, MRE_Preview, nnUnwrap
 
 [f p index] = uigetfile({...
     '*.dicom','DICOM MRE image';...
@@ -30,23 +30,27 @@ function [mag, phase, header] = mri2mat()
     '*.nii.gz','NIFTI Archive'});
 switch index
   case 1 % MRE Image
-    [mag,phase,header] = readDICOM4D(p,f);
+    [mag,phase,info] = readDICOM4D(p,f);
   case 2 % Motion-sensitized MRE image
-    [mag,phase,header] = readDICOM5D(p,f);
+    [mag,phase,info] = readDICOM5D(p,f);
   case 3 % NIFTI Image
     [mag,phase.header] = readNIFTI(p,f);
   case 4 % NIFTI Archive
-    [mag,phase,header] = readNIFTI(p,f);
+    [mag,phase,info] = readNIFTI(p,f);
 end
 
-if(true) % Add flag for verbose output here if you want
-fprintf('Opened %s\n',f);
+info.filename = f;
+info.path = p;
+
+if(false) % Add flag for verbose output here if you want
+  fprintf('Opened %s\n',f);
 end
 
-function [mag,phase,header] = readDICOM4D(p,f)
-  header = dicominfo([p f]);
-  nSlices = header.Private_2001_1018;
-  nPhases = header.Private_2001_1081;
+function [mag,phase,info] = readDICOM4D(p,f)
+% based on getMREimages.m
+  info = dicominfo([p f]);
+  nSlices = info.Private_2001_1018;
+  nPhases = info.Private_2001_1081;
   % Alternately, use dcmdump (only works on MRRC cluster):
   % [~,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
   % nSlices = str2num(result);
@@ -64,7 +68,8 @@ function [mag,phase,header] = readDICOM4D(p,f)
   phase = double(phase)*pi/2048-pi;
 
   
-function [mag,phase,header] = readDICOM5D(p,f)
+function [mag,phase,info] = readDICOM5D(p,f)
+% based on getMRESinkus.m
   filename = [p '../RAW/' strtok(f,'.') '.nii'];
   if exist(filename) > 0,
     im = lunii('Select nifti image',filename);
@@ -81,9 +86,9 @@ function [mag,phase,header] = readDICOM5D(p,f)
   end
   imBrain = imBrain.img;
   
-  header = dicominfo([p f]);
-  nSlices = header.Private_2001_1018;
-  nDirs   = header.Private_2001_1081;
+  info = dicominfo([p f]);
+  nSlices = info.Private_2001_1018;
+  nDirs   = info.Private_2001_1081;
   % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
   % nDirs = str2num(result);
   nPhases = size(im,4) / 2 / nDirs;
@@ -97,14 +102,8 @@ function [mag,phase,header] = readDICOM5D(p,f)
   end
   phase = double(phase)*pi/2048-pi;
   
-function [mag,phase,header] = readNIFTI5D(p,f)
-  filename = [p '../RAW/' strtok(f,'.') '.nii'];
-  if exist(filename) > 0,
-    im = lunii('Select nifti image',[p f]);
-  else
-    filename = [p '../RAW/' strtok(f,'.') '.nii.gz'];
-    im = lunii('Select nifti image',filename);
-  end
+function [mag,phase,info] = readNIFTI5D(p,f)
+  im = lunii('Select nifti image',[p f]);
   im = im.img;
   brainFilename = [p '../RAW/' strtok(f,'.') 'Brain.nii.gz'];
   if exist(brainFilename) > 0,
@@ -114,9 +113,9 @@ function [mag,phase,header] = readNIFTI5D(p,f)
   end
   imBrain = imBrain.img;
   
-  header = dicominfo([p f]);
-  nSlices = header.Private_2001_1018;
-  nDirs   = header.Private_2001_1081;
+  info = dicominfo([p f]);
+  nSlices = info.Private_2001_1018;
+  nDirs   = info.Private_2001_1081;
   % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
   % nDirs = str2num(result);
   nPhases = size(im,4) / 2 / nDirs;
@@ -131,22 +130,22 @@ function [mag,phase,header] = readNIFTI5D(p,f)
   phase = double(phase)*pi/2048-pi;
 
   
-function [mag, phase,header] = readNIFTI(p,f)
+function [mag, phase,info] = readNIFTI(p,f)
 % Load a NIFTI file (.nii) or archive (.nii.gz).
 % Depends on the NIFTI toolbox for MATLAB.
 % See also [1],[2] in the index comments at the end of the file
 
   im = load_untouch_nii([p f]);
-  header = im.hdr;
+  info = im.hdr;
   % By default `load_untouch_nii` creates a 3D matrix, but the image may
   % contain multiple volumes appended back-to-back in the 3rd dimension.
   % Check number of volumes and separate these in the 4th dimension.
   % [x,y,t] -> [x,y,z,volume] 
   % See [1],[2] in the index
-  nX = header.dime.dim(2);
-  nY = header.dime.dim(3);
-  nVolumes = header.dime.dim(5);
-  nSlices = header.dime.dim(4);
+  nX = info.dime.dim(2);
+  nY = info.dime.dim(3);
+  nVolumes = info.dime.dim(5);
+  nSlices = info.dime.dim(4);
   mag = zeros(nX,nY,nSlices,nVolumes);
   for i = 1:nVolumes
     mag(:,:,:,i) = im.img(:,:,((i-1)*nSlices+1):i*nSlices);

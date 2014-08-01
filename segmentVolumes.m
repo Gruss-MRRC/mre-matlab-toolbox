@@ -1,18 +1,69 @@
 function varargout = segmentVolumes(varargin)
 % SEGMENTVOLUMES Isolate and calculate volume of structures in MRI images.
 % 
-% Open an interactive GUI to place cuts and perform segmentation of volumes
-% in an MRI sequence. The intended use is to calculate the volume of the
-% ventricles in the human brain using T1 MRI images.
+% Suggested purpose is to find the volume of the ventricles in the human
+% brain using T1 MRI images, but may be useful in other situations.
+%
+% Opening files: 
+% Open a NIFTI or DICOM image by clicking "Open". MRI2MAT returns
+% the image data and metadata in Matlab matrix format. Coronal, Axial, and
+% Sagittal slices are shown in the XZ, XY, and YZ preview planes,
+% respectively. (If not, try preprocessing the images with `dcm2nii` and
+% FSL's `bet` and `fast` programs or editing the matrices directly in
+% Matlab.) A 3D preview of the brain sliced along the sagittal plane is
+% also shown in a separate window, which may be closed if desired.
+% 
+% Navigation: 
+% Left-clicking in any image plane adjusts the other image planes so that
+% they are aligned with that coordinate. E.g., clicking (y,z) = (10,20) in
+% the sagittal plane shows slice 20 in the axial window and a slice with
+% y=10 in the coronal plane. If open file has more than three dimensions,
+% for example if the NIFTI file contains a breakdown of CSF, gray matter,
+% and white matter as separate volumes, the "Select volume" slider changes
+% which volume is being displayed.
+%
+% Calculating volume:
+% The volume of a region may be determined by clicking "Calculate." The
+% program first segments the selected volume by connectivity, finding
+% continous non-zero elements in the matrix and assigning labels to each
+% discrete body. The user is shown a view of the axial plane with each of
+% these regions color-coded. Clicking a region isolates it. The image
+% header (NIFTI) or DICOM is read and used to calculate the units and
+% dimensions of each voxel. The volume is printed to the command window and
+% status bar in the GUI, with units of mL. A 3D view of just the selected
+% region is shown, which can be used to determine if the correct selection
+% was made and is intact.
+%
+% Placing cuts:
+% To separate the desired region from other connected bodies, you can
+% manually remove pieces of the image. To do so, you need to right-click 4
+% points which define a box. The first 2 points determine the Y and Z
+% extents of the cut; the second 2 determine the extents in X. Think of
+% this as describing a rectangle in the sagittal plane and then setting its
+% width in the coronal or axial planes. There isn't a preview of the cut in
+% this version, but there is an undo (see below).
+%
+% Undo:
+% Pressing the "Backspace" key clears the last point from the cut
+% selection. The "<<" button clears the entire active cut selection. There
+% isn't a function to reset a cut that has been already made.
+%
+% Outputs/Side Effects:
+% After "Calculate" is pressed, the entire matrix is saved in a .mat-file
+% along with the isolated volume, the image header, and the value of the
+% volume. The 3D volume preview  is saved in a .fig file. Both files are
+% saved into the same directory as the original image, with the same
+% filename.
 %
 % Dependencies:
 % MRI2MAT: Convert NIFTI and DICOM images to matrix format
 % GUIDE:   GUI created using GUIDE toolbox
+% Matlab Image Processing Toolbox
 %
 % Author:
 % Alex Krolick <amk283@cornell.edu>
 %
-% See also: GUIDE, GUIDATA, GUIHANDLES, MRI2MAT
+% See also: MRI2MAT, segmentVolumes.fig
 
 % Edit the above text to modify the response to help segmentVolumes
 
@@ -73,6 +124,10 @@ varargout{1} = handles.output;
 
 
 function openButton_Callback(hObject, eventdata, handles)
+% Open a 3 or 4D file using mri2mat. It should contain at least one
+% volume matrix with [x,y,z] aligned in the Right/Anterior/Superior 
+% coordinate system. Additional volumes add a dimension: [x,y,z,volume_num]
+% In the GUI, the planes are: Axial XY, Coronal XZ, Sagittal YZ.
 [M,~,header] = mri2mat();
 handles.M = M;
 
@@ -83,13 +138,17 @@ if length(dims)==3, dims(4)=1; end % pad dims if only 3D
 set(handles.volumeSelect,'Max',dims(4)+.01);
 set(handles.volumeSelect,'Min',1)
 set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
-pt = ceil(dims/2);
+% `handles.pt` is used to determine slice planes.
+% E.g., if `pt` is [65,65,50,2], the sagittal slice is M(65,:,:,2)
+% The next line sets the starting point to the middle of the brain.
+pt = ceil(dims/2); 
 set(handles.volumeSelect,'Value',pt(4));
 handles.pt = pt;
 handles.header = header;
 statusMsg(handles,sprintf('%s %s',...
   'Right-click twice in the sagittal plane to outline a cut,',...
   'then twice in the coronal plane to set the width.'))
+
 guidata(hObject, handles);
 update_Axes(hObject,handles);
 
@@ -115,29 +174,33 @@ set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
 function calculateButton_Callback(hObject, eventdata, handles)
 % Ask user to select which subvolume they want to calculate, then calculate
-% volume and display a 3D image of the region
+% volume and display a 3D image of the region. Save the matrices and figure
+% to disk.
 
-% Region selection
+% Region selection and isolation
+header = handles.header;
 M = handles.M;
 v = round(get(handles.volumeSelect,'Value'));
-L = labelmatrix(bwconncomp(M(:,:,:,v)));
+L = labelmatrix(bwconncomp(M(:,:,:,v))); % find and label connected regions
 L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 % disp('<Volume Histogram>')
 % group_histogram = histc(L(:),0:max(L(:)))
 % [~,index] = max(group_histogram);
 % disp('</Volume Histogram>')
-Lslice = L(:,:,handles.pt(3));
+Lslice = L(:,:,handles.pt(3)); % the active axial slice
+% Show the user `Lslice` and ask them to click on the colored region they
+% want to use for the volume calculation
 h = figure; 
 colormap jet
-imagesc(Lslice,[0 10]) % TODO don't hardcode the color axis
-coords = round(ginput(h));
-val = Lslice(coords(2),coords(1));
+imagesc(Lslice,[0 10]) % TODO don't hardcode the color axis, use histogram
+coords = round(ginput(h)); % get label of the region the user wants to see
+val = Lslice(coords(2),coords(1)); % get value of the label (probably 1 or 2)
 
 % Volume calculation
-[space_units,~] = nifti_units_lookup(handles.header.dime.xyzt_units);
+[space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
 pixdim = handles.header.dime.pixdim(2:4); % voxel dimensions in real units
-voxels = sum(L(:)==val); 
-volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % cubic meters
+voxels = sum(L(:)==val); % total voxels in selected region
+volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % vox -> cubic meters
 
 % Display volume
 volumeMsg = sprintf('Volume of selected region: %g mL',volume*1E6); % m^3 -> mL
@@ -160,10 +223,17 @@ lightangle(90,0);
 set(gcf,'Renderer','opengl'); lighting phong
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
+% Save to disk
+matfile   = [header.path strtok(header.filename,'.') '.mat'];
+imagefile = [header.path strtok(header.filename,'.') '.fig'];
+saveas(h,imagefile);
+save(matfile, 'header', 'M', 'L', 'volume');
+
+
 function [space_units,time_units] = nifti_units_lookup(code)
 % See the NIFTI specification: 
 % http://nifti.nimh.nih.gov/pub/dist/src/niftilib/nifti1.h
-% Bits 0-2 are spatial, 3-6 temporal, 7-8 unused
+% Bits 0-2 are spatial, 3-5 temporal, 6-7 unused
 code = dec2bin(code);
 space_code = bin2dec(code(end-2:end-0));
 time_code  = bin2dec(code(:,end-3));
@@ -179,7 +249,7 @@ switch time_code
   case 3, time_units = 1E-6; %microseconds
 end
 
-
+% Callbacks for clicks in the view planes (axes1,axes2,axes3):
 
 function axes1_ButtonDownFcn(hObject, eventdata, handles)
 % Coronal (XZ) plane
@@ -209,8 +279,7 @@ p = handles.segmentVolumes;
 oldpt = handles.pt;
 switch get(p,'SelectionType')
   case 'normal'%left mouse button click
-    
-    handles.pt = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);   
+     handles.pt = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);   
   case 'alt'%right mouse button click
     i = handles.ptSelect;
     handles.cut{i} = round([newpt(3),newpt(1),oldpt(3),oldpt(4)]);
@@ -225,7 +294,7 @@ update_Axes(hObject,handles);
 
 
 function axes3_ButtonDownFcn(hObject, eventdata, handles)
-% Sagittal (YZ) Plane, transposed so Z is up
+% Sagittal (YZ) Plane
 newpt = get(hObject,'CurrentPoint');
 p = handles.segmentVolumes;
 oldpt = handles.pt;
@@ -246,6 +315,8 @@ update_Axes(hObject,handles);
 
 
 function update_Axes(hObject,handles)
+% Redraw the view planes. Called after opening a file or when requested by
+% a callback function
 f = [handles.axes1,handles.axes2,handles.axes3];
 M = handles.M;
 pt = handles.pt;
@@ -259,10 +330,14 @@ if ~isempty(c{1}) && ~isempty(c{2}) && ~isempty(c{3}) && ~isempty(c{4})
     min([c{1}(2),c{2}(2)]) : max([c{1}(2),c{2}(2)]),... % Y extent
     min([c{1}(3),c{2}(3)]) : max([c{1}(3),c{2}(3)]),... % Z extent
     c{1}(4)) = 0;
-  handles.cut = {[],[],[],[]};
-  handles.M = M;
+  handles.cut = {[],[],[],[]}; %reset selection
+  handles.M = M; %save changes
   guidata(hObject,handles)
 end
+
+% Redraw the images in each plane. Transposes ensure Z points vertically
+% rather than horizontally.'HitTest','off' makes clicks pass through to the
+% parent axes so mouse click coordinates can be recorded with axes callbacks
 imagesc(transpose(squeeze(M(:,pt(2),:,pt(4)))),'Parent',f(1),'HitTest','off');
 imagesc(squeeze(M(:,:,pt(3),pt(4))),'Parent',f(2),'HitTest','off');
 imagesc(transpose(squeeze(M(pt(1),:,:,pt(4)))),'Parent',f(3),'HitTest','off');
@@ -272,7 +347,8 @@ guidata(hObject,handles)
 
 
 function volumeSelect_Callback(hObject, eventdata, handles)
-v = round(get(hObject,'Value'));
+% volume selection slider callback
+v = round(get(hObject,'Value')); %get slider position
 handles.pt(4) = v;
 statusMsg(handles,sprintf('Changed to volume %g',v))
 guidata(hObject,handles)
