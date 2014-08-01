@@ -119,7 +119,7 @@ function calculateButton_Callback(hObject, eventdata, handles)
 
 % Region selection
 M = handles.M;
-v = get(handles.volumeSelect,'Value');
+v = round(get(handles.volumeSelect,'Value'));
 L = labelmatrix(bwconncomp(M(:,:,:,v)));
 L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 % disp('<Volume Histogram>')
@@ -134,8 +134,8 @@ coords = round(ginput(h));
 val = Lslice(coords(2),coords(1));
 
 % Volume calculation
-[space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
-pixdim = header.dime.pixdim(2:4); % voxel dimensions in real units
+[space_units,~] = nifti_units_lookup(handles.header.dime.xyzt_units);
+pixdim = handles.header.dime.pixdim(2:4); % voxel dimensions in real units
 voxels = sum(L(:)==val); 
 volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % cubic meters
 
@@ -166,17 +166,17 @@ function [space_units,time_units] = nifti_units_lookup(code)
 % Bits 0-2 are spatial, 3-6 temporal, 7-8 unused
 code = dec2bin(code);
 space_code = bin2dec(code(end-2:end-0));
-time_code  = bin2dec(code(end-5,end-3));
+time_code  = bin2dec(code(:,end-3));
 switch space_code
-  case '1', space_units = 1E0;  %meters
-  case '2', space_units = 1E-3; %millimeters
-  case '3', space_units = 1E-6; %micrometers
+  case 1, space_units = 1E0;  %meters
+  case 2, space_units = 1E-3; %millimeters
+  case 3, space_units = 1E-6; %micrometers
 end
 
 switch time_code
-  case '1', time_units = 1E0;  %seconds
-  case '2', time_units = 1E-3; %milliseconds
-  case '3', time_units = 1E-6; %microseconds
+  case 1, time_units = 1E0;  %seconds
+  case 2, time_units = 1E-3; %milliseconds
+  case 3, time_units = 1E-6; %microseconds
 end
 
 
