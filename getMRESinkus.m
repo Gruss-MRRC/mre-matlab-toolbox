@@ -14,8 +14,6 @@ function [im_mag, im_phase] = getMRESinkus(showFig)
 %
 % Inputs:
 %   showFig:     Display images, true or false (faster with false)
-%   f,p:         Filename (f) and path (p) 
-%   P_axes:      Parent axes handle
 %
 % Outputs:
 %   im_mag:      4D Matrix (x,y,slice,phase)
@@ -47,7 +45,9 @@ im1 = im1.img;
 
 %% Metadata extraction
 nSlices = size(im1,3);
-[status,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+[status,result] = system(['dcmdump ' p f...
+  ' | grep NumberOfTemporalPositions'...
+  ' | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
 nDirs = str2num(result);
 
 nPhases = size(im1,4) / 2 / nDirs;
@@ -76,9 +76,13 @@ end
 centPos = [];
 %uiwait(msgbox('Select center to begin dealiasing step','Phase unwrapping'))
 colormap('gray')
+h = axes; % Parent axes handle for images that pop up in nnUnwrap
 for k = 1:nDirs, 
     for j = 1:nSlices,
-        [im1a_ph(:,:,:,j,k),centPos] = nnUnwrap(squeeze(im1a_r(:,:,j,:,k)),squeeze(im1a_i(:,:,j,:,k)),1,centPos,showFig,P_axes);
+        [im1a_ph(:,:,:,j,k),centPos] = nnUnwrap(...
+          squeeze(im1a_r(:,:,j,:,k)),...
+          squeeze(im1a_i(:,:,j,:,k)),1,...
+          centPos,showFig,h);
     end
 end
 
