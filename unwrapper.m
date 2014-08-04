@@ -1,6 +1,6 @@
 function P = unwrapper(M,P)
 % Unwrap the phase of a multidimensional image. Matlab's `unwrap` function
-% operates columnwise and doesn't work well for data >1D. This works on up
+% operates columnwise and doesn't work well for data >1D. This works on 2D
 % to 5D images and, in particular, is designed to unwrap magnetic resonance
 % elastography (MRE) images stored in DICOM or NIFTI format.
 %
@@ -27,8 +27,10 @@ function P = unwrapper(M,P)
  
   %--Config--%
   verbose=0; % Toggle debugging flags
+  
   % If M or P are empty, open a new file using mri2mat
   if (isempty(P) || isempty(M)), [M,P,~] = mri2mat(); end
+  
   P = mask(P,M,'minimum',180,NaN);
   [nX,nY,nSlices,nPhases,nDirs] = size(P);
   

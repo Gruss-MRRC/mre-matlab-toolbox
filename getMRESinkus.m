@@ -1,5 +1,4 @@
-function [im_mag, im_phase] = getMRESinkus(showFig,f,p,P_axes)
-
+function [im_mag, im_phase] = getMRESinkus(showFig)
 % Extract magnitude and phase images from DICOM files.
 % On run, prompts for a DICOM image of the subject's brain
 % and a NIFTI (*.nii) image created using the Brain
@@ -36,7 +35,7 @@ function [im_mag, im_phase] = getMRESinkus(showFig,f,p,P_axes)
 % See also getMREimages, load_untouch_nii
 
 %% File selection
-% [f p] = uigetfile('*.dicom');
+[f p] = uigetfile('*.dicom');
 filename = [p '../RAW/' strtok(f,'.') '.nii'];
 if exist(filename) > 0,
     im1 = lunii('Select nifti image',filename);

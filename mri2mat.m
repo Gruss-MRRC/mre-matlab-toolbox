@@ -5,8 +5,8 @@ function [mag, phase, info] = mri2mat()
 %   .nii, .nii.gz, .dcm, .dicom files (specified interactively)
 %   
 % Outputs:
-%   mag:    4 or 5-D Matrix (x,y,slice,phase,[direction])
-%   phase:  4 or 5-D Matrix (x,y,slice,phase,[direction])
+%   mag:    4 or 5-D matrix (x,y,slice,phase,[direction])
+%   phase:  4 or 5-D matrix (x,y,slice,phase,[direction])
 %   info:   structure containing metadata about the file
 %
 % Dependencies:
@@ -24,10 +24,11 @@ function [mag, phase, info] = mri2mat()
 % See also getMRESinkus, MRE_Preview, nnUnwrap
 
 [f p index] = uigetfile({...
-    '*.dicom','DICOM MRE image';...
-    '*.dicom','DICOM Motion-encoded MRE image';...
-    '*.nii',  'NIFTI image';
-    '*.nii.gz','NIFTI Archive'});
+    '*.dicom', '4D DICOM';...
+    '*.dicom', '5D DICOM';...
+    '*.nii',   'NIFTI image';
+    '*.nii.gz','NIFTI Archive';...
+    '*.nii',   '5D NIFTI'});
 switch index
   case 1 % MRE Image
     [mag,phase,info] = readDICOM4D(p,f);
@@ -37,6 +38,8 @@ switch index
     [mag,phase.header] = readNIFTI(p,f);
   case 4 % NIFTI Archive
     [mag,phase,info] = readNIFTI(p,f);
+  case 5 % 5D NIFTI
+    [mag,phase,info] = readNIFTI5D(p,f);
 end
 
 info.filename = f;
@@ -48,14 +51,19 @@ end
 
 function [mag,phase,info] = readDICOM4D(p,f)
 % based on getMREimages.m
-  info = dicominfo([p f]);
-  nSlices = info.Private_2001_1018;
-  nPhases = info.Private_2001_1081;
-  % Alternately, use dcmdump (only works on MRRC cluster):
-  % [~,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
-  % nSlices = str2num(result);
-  % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-  % nPhases = str2num(result);
+
+  if exist('/gmrrc/mrbin/dcmdump','file')  && isunix()
+    % Use dcmdump to get metadata (only works on MRRC cluster):
+    [~,result] = system(['dcmdump ' p f ...
+      ' | grep "(2001,1018)" | awk ''{print $3}''']);
+    nSlices = str2num(result);
+    [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+    nPhases = str2num(result);
+  else
+    info = dicominfo([p f]);
+    nSlices = info.Private_2001_1018;
+    nPhases = info.Private_2001_1081;
+  end
   im = double(squeeze(dicomread([p f])));
   for j = 1:2*nSlices,
     for k = 1:nPhases,
@@ -85,45 +93,51 @@ function [mag,phase,info] = readDICOM5D(p,f)
     imBrain = lunii('Select NIFTI BET image','');
   end
   imBrain = imBrain.img;
+  mask = int16(imBrain>0);
   
-  info = dicominfo([p f]);
-  nSlices = info.Private_2001_1018;
-  nDirs   = info.Private_2001_1081;
-  % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-  % nDirs = str2num(result);
-  nPhases = size(im,4) / 2 / nDirs;
+  if exist('/gmrrc/mrbin/dcmdump','file') && isunix()
+    nSlices = size(im,3);
+    [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+    nDirs = str2num(result);
+    nPhases = size(im,4) / 2 / nDirs;
+    info.filename = f;
+  else
+    info = dicominfo([p f]);
+    nSlices = info.Private_2001_1018;
+    nDirs   = info.Private_2001_1081;
+  end
+  
   k1=1;
-  for dir = 1:nSlices, %nDirs
+  for dir = 1:nDirs,
     for ph = 1:nPhases,
-      mag(:,:,:,ph,dir) = im(:,:,:,k1).* int16(imBrain>0);
-      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1).* int16(imBrain>0);
+      mag(:,:,:,ph,dir) = im(:,:,:,k1).* mask;
+      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1).* mask;
       k1 = k1 + 1;
      end
   end
   phase = double(phase)*pi/2048-pi;
   
 function [mag,phase,info] = readNIFTI5D(p,f)
-  im = lunii('Select nifti image',[p f]);
+ % Even if the data in a NIFTI file is 5D, it is usually stored in a 4D
+ % format. Assume there are 4 directions and that there are both phase and
+ % magnitude components, and break into a 5D matrix.
+  im = load_untouch_nii([p f]);
+  im2 = load_nii([p f]);
+  size(im.img)
+  size(im2.img)
+  info = im.hdr;
   im = im.img;
-  brainFilename = [p '../RAW/' strtok(f,'.') 'Brain.nii.gz'];
-  if exist(brainFilename) > 0,
-    imBrain = lunii('Select NIFTI BET image',brainFilename);
-  else
-    imBrain = lunii('Select NIFTI BET image','');
-  end
-  imBrain = imBrain.img;
-  
-  info = dicominfo([p f]);
-  nSlices = info.Private_2001_1018;
-  nDirs   = info.Private_2001_1081;
-  % [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-  % nDirs = str2num(result);
-  nPhases = size(im,4) / 2 / nDirs;
+  nX = info.dime.dim(2);
+  nY = info.dime.dim(3);
+  nSlices = info.dime.dim(4);
+  nVolumes = info.dime.dim(5);
+  nDirs=4; % x y z b0
+  nPhases = nVolumes / 2 / nDirs;
   k1=1;
-  for dir = 1:nSlices, %nDirs
+  for dir = 1:nDirs,
     for ph = 1:nPhases,
-      mag(:,:,:,ph,dir) = im(:,:,:,k1).* int16(imBrain>0);
-      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1).* int16(imBrain>0);
+      mag(:,:,:,ph,dir) = im(:,:,:,k1);
+      phase(:,:,:,ph,dir) = im(:,:,:,nVolumes / 2 + k1);
       k1 = k1 + 1;
      end
   end
