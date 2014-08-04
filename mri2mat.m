@@ -21,7 +21,8 @@ function [mag, phase, info] = mri2mat()
 %   Mark Wagshul <mark.wagshul@einstein.yu.edu>
 %   Alex Krolick <amk283@cornell.edu>
 %
-% See also getMRESinkus, MRE_Preview, nnUnwrap
+% See also getMRESinkus, MRE_Preview, nnUnwrap, load_untouch_nii, load_nii,
+% dicomread, dicominfo
 
 [f p index] = uigetfile({...
     '*.dicom', '4D DICOM';...
@@ -51,7 +52,6 @@ end
 
 function [mag,phase,info] = readDICOM4D(p,f)
 % based on getMREimages.m
-
   if exist('/gmrrc/mrbin/dcmdump','file')  && isunix()
     % Use dcmdump to get metadata (only works on MRRC cluster):
     [~,result] = system(['dcmdump ' p f ...
@@ -151,19 +151,7 @@ function [mag, phase,info] = readNIFTI(p,f)
 
   im = load_untouch_nii([p f]);
   info = im.hdr;
-  % By default `load_untouch_nii` creates a 3D matrix, but the image may
-  % contain multiple volumes appended back-to-back in the 3rd dimension.
-  % Check number of volumes and separate these in the 4th dimension.
-  % [x,y,t] -> [x,y,z,volume] 
-  % See [1],[2] in the index
-  nX = info.dime.dim(2);
-  nY = info.dime.dim(3);
-  nVolumes = info.dime.dim(5);
-  nSlices = info.dime.dim(4);
-  mag = zeros(nX,nY,nSlices,nVolumes);
-  for i = 1:nVolumes
-    mag(:,:,:,i) = im.img(:,:,((i-1)*nSlices+1):i*nSlices);
-  end
+  mag = im.img;
   phase = [];
 
 

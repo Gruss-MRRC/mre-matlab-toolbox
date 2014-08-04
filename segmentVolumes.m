@@ -321,7 +321,7 @@ f = [handles.axes1,handles.axes2,handles.axes3];
 M = handles.M;
 pt = handles.pt;
 colormap gray
-axis tight
+axis equal
 
 % Cut out the selected region if selection is complete
 c = handles.cut;
