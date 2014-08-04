@@ -1,22 +1,24 @@
-function [mag, phase, info] = mri2mat()
+function [mag, varargout] = mri2mat()
 % Convert NIFTI and DICOM images to matrix format.
 %
 % Inputs:
 %   .nii, .nii.gz, .dcm, .dicom files (specified interactively)
 %   
 % Outputs:
-%   mag:    4 or 5-D matrix (x,y,slice,phase,[direction])
-%   phase:  4 or 5-D matrix (x,y,slice,phase,[direction])
-%   info:   structure containing metadata about the file
+%   mag:     4 or 5-D matrix (x,y,slice,phase,[direction])
+%  [phase]:  4 or 5-D matrix (x,y,slice,phase,[direction]) *optional
+%  [info]:   structure containing metadata about the file  *optional
 %
 % Dependencies:
-%   (+) NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
-%   (+) BET Toolbox: /gmrrc/mrbin/fsl.cver/bin/bet
-%   (*) dcmdump: /gmrrc/mrbin/dcmdump
-%   (*) GNU core utils
-%    *  Optional, but faster than using MATLAB's DICOM toolbox for metadata
-%    +  Required for 5D DICOM and NIFTI processing
-%
+%   + NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
+%   ~ BET Toolbox: /gmrrc/mrbin/fsl.cver/bin/bet
+%   * dcmdump: /gmrrc/mrbin/dcmdump
+%   * GNU core utils (grep, awk, etc.)
+%   --------------
+%   +  Required to work with NIFTI images
+%   ~  Required to create masks, but not called in this program
+%   *  Optional, but faster than using MATLAB's DICOM toolbox for metadata
+% 
 % Authors:
 %   Mark Wagshul <mark.wagshul@einstein.yu.edu>
 %   Alex Krolick <amk283@cornell.edu>
@@ -24,47 +26,69 @@ function [mag, phase, info] = mri2mat()
 % See also getMRESinkus, MRE_Preview, nnUnwrap, load_untouch_nii, load_nii,
 % dicomread, dicominfo
 
+% Open file
 [f p index] = uigetfile({...
-    '*.dicom', '4D DICOM';...
-    '*.dicom', '5D DICOM';...
-    '*.nii',   'NIFTI image';
-    '*.nii.gz','NIFTI Archive';...
-    '*.nii',   '5D NIFTI'});
+    '*.dicom', '3D DICOM to 4D Mag & Phase Matrices';...
+    '*.dicom', '4D DICOM to 5D Mag & Phase Matrices';...
+    '*.dicom', '4D DICOM to 5D Mag & Phase Matrices with NIFTI mask';...
+    '*.nii',   '4D NIFTI to 5D Mag & Phase Matrices';...
+    '*.nii',   'NIFTI File';...
+    '*.nii.gz','NIFTI Archive';});
+  
+% Do something based on filetype
 switch index
   case 1 % MRE Image
     [mag,phase,info] = readDICOM4D(p,f);
   case 2 % Motion-sensitized MRE image
     [mag,phase,info] = readDICOM5D(p,f);
-  case 3 % NIFTI Image
-    [mag,phase.header] = readNIFTI(p,f);
-  case 4 % NIFTI Archive
-    [mag,phase,info] = readNIFTI(p,f);
-  case 5 % 5D NIFTI
+  case 3 % Motion-sensitized MRE image + mask
+    [mag,phase,info] = readDICOM5D_Mask(p,f);
+  case 4 % 5D NIFTI
     [mag,phase,info] = readNIFTI5D(p,f);
+  case 5 % NIFTI file
+    [mag,info] = readNIFTI(p,f);
+    no_phase = true;
+  case 6 % NIFTI archive
+    [mag,info] = readNIFTI(p,f);
+    no_phase = true;
 end
 
+% Add data about which file was opened to header info
 info.filename = f;
 info.path = p;
 
-if(false) % Add flag for verbose output here if you want
-  fprintf('Opened %s\n',f);
+% Process optional outputs (phase and info)
+if nargout == 3, 
+  varargout{1} = phase; 
+  varargout{2} = info;
+elseif nargout == 2 && no_phase == true, 
+  varargout{1} = info;
 end
+
 
 function [mag,phase,info] = readDICOM4D(p,f)
 % based on getMREimages.m
+
   if exist('/gmrrc/mrbin/dcmdump','file')  && isunix()
-    % Use dcmdump to get metadata (only works on MRRC cluster):
+    % Use `dcmdump` to get metadata (only works on MRRC cluster):
     [~,result] = system(['dcmdump ' p f ...
       ' | grep "(2001,1018)" | awk ''{print $3}''']);
     nSlices = str2num(result);
-    [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+    [~,result] = system(['dcmdump ' p f...
+      ' | grep NumberOfTemporalPositions'...
+      ' | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
     nPhases = str2num(result);
+    info = struct();
   else
+    % Fall back to using Matlab utilities
     info = dicominfo([p f]);
     nSlices = info.Private_2001_1018;
     nPhases = info.Private_2001_1081;
   end
-  im = double(squeeze(dicomread([p f])));
+  
+  im = dicomread([p f]);
+  im = double(squeeze(im));
+  
   for j = 1:2*nSlices,
     for k = 1:nPhases,
       im_(:,:,j,k) = im(:,:,(j-1)*nPhases+k);
@@ -74,10 +98,53 @@ function [mag,phase,info] = readDICOM4D(p,f)
   mag = im_(:,:,1:nSlices,:);
   phase = im_(:,:,nSlices+1:2*nSlices,:);
   phase = double(phase)*pi/2048-pi;
-
   
-function [mag,phase,info] = readDICOM5D(p,f)
-% based on getMRESinkus.m
+
+  function [mag,phase,info] = readDICOM5D(p,f)
+% Take a 4D DICOM file and output 5D matrices for phase and magnitude by
+% shuffling the 4th dimension. Assume that the input format is [x,y,z,t],
+% where the time axis is filled according to the sequence
+% [(mag,dir1,t1),(mag,dir1,t2)...(phase,dirN,tN)]. Decompose into a matrix
+% for phase and a matrix for magnitude, which should each be of the form
+% [x,y,z,phase,direction], where phase is a temporal dimension. The
+% difference between READNIFTI5D and READDICOM5D is that the DICOM header
+% contains information about the number of dimensions, but the NIFTI header
+% does not. The number of directions is assumed to be 4 in READNIFTI5D.
+%
+% See also getMRESinkus.m, readNIFTI5D, readDICOM5D_Mask
+
+  im = dicomread([p f]);
+  im = double(squeeze(im));
+  
+  if exist('/gmrrc/mrbin/dcmdump','file') && isunix()
+    [~,result] = system(['dcmdump ' p f...
+      ' | grep NumberOfTemporalPositions'...
+      '| awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+    nDirs = str2num(result);
+    nPhases = size(im,4) / 2 / nDirs;
+    info = struct();
+  else
+    info = dicominfo([p f]);
+    nDirs   = info.Private_2001_1081;
+  end
+  
+  k1=1;
+  for dir = 1:nDirs,
+    for ph = 1:nPhases,
+      mag(:,:,:,ph,dir) = im(:,:,:,k1);
+      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1);
+      k1 = k1 + 1;
+     end
+  end
+  phase = double(phase)*pi/2048-pi;
+  
+  
+function [mag,phase,info] = readDICOM5D_Mask(p,f)
+% Same as READDICOM5D, but mask the output. Usually the mask is created
+% using `Brain Extraction Toolbox`, called using 'bet' at the command line.
+% See also getMRESinkus.m, readNIFTI5D, readDICOM5D
+
+  % Acquire NIFTI image
   filename = [p '../RAW/' strtok(f,'.') '.nii'];
   if exist(filename) > 0,
     im = lunii('Select nifti image',filename);
@@ -86,6 +153,8 @@ function [mag,phase,info] = readDICOM5D(p,f)
     im = lunii('Select nifti image',filename);
   end
   im = im.img;
+  
+  % Acquire NIFTI mask
   brainFilename = [p '../RAW/' strtok(f,'.') 'Brain.nii.gz'];
   if exist(brainFilename) > 0,
     imBrain = lunii('Select NIFTI BET image',brainFilename);
@@ -95,18 +164,22 @@ function [mag,phase,info] = readDICOM5D(p,f)
   imBrain = imBrain.img;
   mask = int16(imBrain>0);
   
+  % Metadata
   if exist('/gmrrc/mrbin/dcmdump','file') && isunix()
     nSlices = size(im,3);
-    [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+    [~,result] = system(['dcmdump ' p f ...
+      ' | grep NumberOfTemporalPositions'...
+      ' | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
     nDirs = str2num(result);
     nPhases = size(im,4) / 2 / nDirs;
-    info.filename = f;
+    info = struct();
   else
     info = dicominfo([p f]);
     nSlices = info.Private_2001_1018;
     nDirs   = info.Private_2001_1081;
   end
   
+  % Rearrange volumes
   k1=1;
   for dir = 1:nDirs,
     for ph = 1:nPhases,
@@ -115,21 +188,24 @@ function [mag,phase,info] = readDICOM5D(p,f)
       k1 = k1 + 1;
      end
   end
+  
+  % Convert to radians
   phase = double(phase)*pi/2048-pi;
   
 function [mag,phase,info] = readNIFTI5D(p,f)
- % Even if the data in a NIFTI file is 5D, it is usually stored in a 4D
- % format. Assume there are 4 directions and that there are both phase and
- % magnitude components, and break into a 5D matrix.
+% Take a 4D NIFTI file and output 5D matrices for phase and magnitude by
+% shuffling the 4th dimension. Assume that the input format is [x,y,z,t],
+% where the time axis is filled according to the sequence
+% [(mag,dir1,t1),(mag,dir1,t2)...(phase,dirN,tN)]. Decompose into a matrix
+% for phase and a matrix for magnitude, which should each be of the form
+% [x,y,z,phase,direction], where phase is a temporal dimension. The
+% difference between READNIFTI5D and READDICOM5D is that the DICOM header
+% contains information about the number of dimensions, but the NIFTI header
+% does not. The number of directions is assumed to be 4 in READNIFTI5D.
+
   im = load_untouch_nii([p f]);
-  im2 = load_nii([p f]);
-  size(im.img)
-  size(im2.img)
   info = im.hdr;
   im = im.img;
-  nX = info.dime.dim(2);
-  nY = info.dime.dim(3);
-  nSlices = info.dime.dim(4);
   nVolumes = info.dime.dim(5);
   nDirs=4; % x y z b0
   nPhases = nVolumes / 2 / nDirs;
@@ -141,10 +217,12 @@ function [mag,phase,info] = readNIFTI5D(p,f)
       k1 = k1 + 1;
      end
   end
+  
+  % Convert to radians
   phase = double(phase)*pi/2048-pi;
 
   
-function [mag, phase,info] = readNIFTI(p,f)
+function [mag, info] = readNIFTI(p,f)
 % Load a NIFTI file (.nii) or archive (.nii.gz).
 % Depends on the NIFTI toolbox for MATLAB.
 % See also [1],[2] in the index comments at the end of the file
