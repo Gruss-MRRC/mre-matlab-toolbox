@@ -1,5 +1,5 @@
-function varargout = MREAnalyser(varargin)
-% MREANALYSER Preview and phase unwrap MRE sequences.
+function varargout = MRE_Preview(varargin)
+% MRE_Preview Preview and phase unwrap MRE sequences.
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES, UNWRAPPER, MRI2MAT
 % 
@@ -7,16 +7,16 @@ function varargout = MREAnalyser(varargin)
 % Alex Krolick <amk283@cornell.edu>
 % Mark Wagshul <mark.wagshul@einstein.yu.edu>
 
-% Edit the above text to modify the response to help MREAnalyser
+% Edit the above text to modify the response to help MRE_Preview
 
-% Last Modified by GUIDE v2.5 16-Jul-2014 12:23:14
+% Last Modified by GUIDE v2.5 05-Aug-2014 10:53:42
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @MREAnalyser_OpeningFcn, ...
-                   'gui_OutputFcn',  @MREAnalyser_OutputFcn, ...
+                   'gui_OpeningFcn', @MRE_Preview_OpeningFcn, ...
+                   'gui_OutputFcn',  @MRE_Preview_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -31,15 +31,15 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before MREAnalyser is made visible.
-function MREAnalyser_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before MRE_Preview is made visible.
+function MRE_Preview_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to MREAnalyser (see VARARGIN)
+% varargin   command line arguments to MRE_Preview (see VARARGIN)
 
-% Choose default command line output for MREAnalyser
+% Choose default command line output for MRE_Preview
 handles.output = hObject;
 
 % Set internal variables
@@ -58,13 +58,13 @@ guidata(hObject, handles);
 % Prompt for file
 statusMsg(handles,'Open an image file')
 
-% UIWAIT makes MREAnalyser wait for user response (see UIRESUME)
+% UIWAIT makes MRE_Preview wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 colormap gray;
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = MREAnalyser_OutputFcn(hObject, eventdata, handles) 
+function varargout = MRE_Preview_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -263,119 +263,41 @@ function openFile(hObject,handles)
 
 statusMsg(handles,'Opening...');
 
-[f p index] = uigetfile({...
-    '*.dicom','DICOM MRE image';...
-    '*.dicom','DICOM Motion-encoded MRE image';...
-    '*.nii*',  'NIFTI image'});
+[mag,phase] = mri2mat();
 
-w = handles.sliceWindow;
 i = handles.curImg;
-
-% info = dicominfo(f);
-% nSlices = double(info.Private_2001_1018);
-% nPhases = double(info.Private_2001_1081);
-
+nSlices = size(mag,3);
+nPhases = size(mag,4);
 statusMsg(handles,'Opening image...');
-
-switch index
-    case 1 % MRE Image
-        im = double(squeeze(dicomread([p f])));
-        statusMsg(handles,'Reading metadata...');
-        [~,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
-        nSlices = str2num(result);
-        [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-        nPhases = str2num(result); 
-
-        for j = 1:2*nSlices,
-            for k = 1:nPhases,
-                im1a(:,:,j,k) = im(:,:,(j-1)*nPhases+k);
-            end
-        end
-        mag = im1a(:,:,1:nSlices,:);
-        phase = im1a(:,:,nSlices+1:2*nSlices,:);
-        phase = double(phase - 2048)*pi/2048;
-        %[mag, phase] = getMREimages(1:30,false,w,f,p);
-        handles.images{i}.mag = mag;
-        handles.images{i}.phase = phase;
-        handles.activeImg = phase(:,:,:,:,1);
-        set(handles.dirBtnGrp,'Visible','off');  
-    case 2 % Motion-sensitized MRE image
-        %[mag, phase] = getMRESinkus(false,f,p,handles.sliceWindow);
-        filename = [p '../RAW/' strtok(f,'.') '.nii'];
-        if exist(filename) > 0,
-            im = lunii('Select nifti image',filename);
-        else
-            filename = [p '../RAW/' strtok(f,'.') '.nii.gz'];
-            im = lunii('Select nifti image',filename);
-        end
-        im = im.img;
-        nSlices = size(im,3);
-        brainFilename = [p '../RAW/' strtok(f,'.') 'Brain.nii.gz'];
-        if exist(brainFilename) > 0,
-            imBrain = lunii('Select NIFTI BET image',brainFilename);
-        else
-            imBrain = lunii('Select NIFTI BET image','');
-        end
-        imBrain = imBrain.img;
-        [~,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
-        nDirs = str2num(result);
-        nPhases = size(im,4) / 2 / nDirs;
-        k1=1;
-        for dir = 1:nDirs,
-            for ph = 1:nPhases,
-                mag(:,:,:,ph,dir) = im(:,:,:,k1).* int16(imBrain>0);
-                phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1).* int16(imBrain>0);
-                k1 = k1 + 1;
-            end
-        end
-        phase = double(phase - 2048)*pi/2048;
-        handles.images{i}.mag = mag;
-        handles.images{i}.phase = phase;
-        handles.activeImg = phase(:,:,:,:,1);
-        set(handles.dirBtnGrp,'Visible','on');
-    case 3 % NIFTI
-        im = load_untouch_nii([p f]);
-        mag = im.img;
-        phase = []; 
-        [nX,nY,nSlices,nPhases,nDirs] = size(mag);
-        handles.images{i}.mag = mag;
-        handles.images{i}.phase = phase;
-        handles.activeImg = mag(:,:,:,:);
-        set(handles.dirBtnGrp,'Visible','off');
-        set(handles.magToggle,'Visible','off');
+switch length(size(mag))
+  case 4 % MRE image
+    handles.images{i}.mag = mag;
+    handles.images{i}.phase = phase;
+    handles.activeImg = phase;
+    set(handles.dirBtnGrp,'Visible','off');  
+    set(handles.magToggle,'Visible','on');
+  case 5 % Motion-sensitized MRE image
+    handles.images{i}.mag = mag;
+    handles.images{i}.phase = phase;
+    handles.activeImg = phase;
+    set(handles.dirBtnGrp,'Visible','on');
+    set(handles.magToggle,'Visible','on');
 end
+statusMsg(handles,'Setting up workspace...');
+p = handles.phaseSelect;
+s = handles.sliceSelect;
+handles.phase = 1;
+handles.slice = 1;
+set(s,'Min',1), set(s,'Max',nSlices), set(s, 'Value',handles.slice);
+set(p,'Min',1), set(p,'Max',nPhases), set(p, 'Value',handles.phase);
+set(s, 'SliderStep', [1 1]/max((nSlices-1),1));
+set(p, 'SliderStep', [1 1]/max((nPhases-1),1));
+guidata(hObject,handles);
+set(handles.magToggle,'SelectedObject',handles.phaseBtn);
+updateCAxis(handles);
+redraw(handles);
+statusMsg(handles,'Image loaded')
 
-if index==1 || index==2
-    statusMsg(handles,'Setting up workspace...');
-
-    p = handles.phaseSelect;
-    s = handles.sliceSelect;
-    set(s,'Min',1), set(s,'Max',nSlices), set(s, 'Value',1);
-    set(p,'Min',1), set(p,'Max',nPhases), set(p, 'Value',1);
-    set(s, 'SliderStep', [1 1]/max((nSlices-1),1));
-    set(p, 'SliderStep', [1 1]/max((nPhases-1),1));
-
-    guidata(hObject,handles);
-    set(handles.magToggle,'SelectedObject',handles.phaseBtn);
-    updateCAxis(handles);
-    redraw(handles);
-    statusMsg(handles,'Image loaded')
-else
-    statusMsg(handles,'Setting up workspace...');
-
-    p = handles.phaseSelect;
-    s = handles.sliceSelect;
-    set(s,'Min',1), set(s,'Max',nSlices), set(s, 'Value',1);
-    set(p,'Min',1), set(p,'Max',nPhases), set(p, 'Value',1);
-    set(s, 'SliderStep', [1 1]/max((nSlices-1),1));
-    set(p, 'SliderStep', [1 1]/max((nPhases-1),1));
-
-    set(handles.magToggle,'SelectedObject',handles.magBtn);
-    guidata(hObject,handles);
-    updateCAxis(handles);
-    redraw(handles);
-    statusMsg(handles,'Image loaded')
-end
 
 % --------------------------------------------------------------------
 function saveMovie_Callback(hObject, eventdata, handles)

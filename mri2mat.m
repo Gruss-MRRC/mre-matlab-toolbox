@@ -29,8 +29,8 @@ function [mag, varargout] = mri2mat()
 % Open file
 [f p index] = uigetfile({...
     '*.dicom', '3D DICOM to 4D Mag & Phase Matrices';...
-    '*.dicom', '4D DICOM to 5D Mag & Phase Matrices';...
-    '*.dicom', '4D DICOM to 5D Mag & Phase Matrices with NIFTI mask';...
+    '*.dicom', '3D DICOM to 5D Mag & Phase Matrices';...
+    '*.dicom', '3D DICOM to 5D Mag & Phase Matrices with NIFTI mask';...
     '*.nii',   '4D NIFTI to 5D Mag & Phase Matrices';...
     '*.nii',   'NIFTI File';...
     '*.nii.gz','NIFTI Archive';});
@@ -39,12 +39,16 @@ function [mag, varargout] = mri2mat()
 switch index
   case 1 % MRE Image
     [mag,phase,info] = readDICOM4D(p,f);
+    no_phase = false;
   case 2 % Motion-sensitized MRE image
     [mag,phase,info] = readDICOM5D(p,f);
+    no_phase = false;
   case 3 % Motion-sensitized MRE image + mask
     [mag,phase,info] = readDICOM5D_Mask(p,f);
+    no_phase = false;
   case 4 % 5D NIFTI
     [mag,phase,info] = readNIFTI5D(p,f);
+    no_phase = false;
   case 5 % NIFTI file
     [mag,info] = readNIFTI(p,f);
     no_phase = true;
@@ -60,9 +64,11 @@ info.path = p;
 % Process optional outputs (phase and info)
 if nargout == 3, 
   varargout{1} = phase; 
-  varargout{2} = info;
-elseif nargout == 2 && no_phase == true, 
-  varargout{1} = info;
+  varargout{2} = info; % return mag, phase, and info
+elseif nargout == 2 &&  no_phase, 
+  varargout{1} = info; % return mag and info
+elseif nargout == 2 && ~no_phase,
+  varargout{1} = phase; % return mag and phase
 end
 
 
@@ -101,40 +107,56 @@ function [mag,phase,info] = readDICOM4D(p,f)
   
 
   function [mag,phase,info] = readDICOM5D(p,f)
-% Take a 4D DICOM file and output 5D matrices for phase and magnitude by
-% shuffling the 4th dimension. Assume that the input format is [x,y,z,t],
+% Take a 3D DICOM file and output 5D matrices for phase and magnitude by
+% shuffling the 4th dimension. Assume that the input format is [x,y,t],
 % where the time axis is filled according to the sequence
-% [(mag,dir1,t1),(mag,dir1,t2)...(phase,dirN,tN)]. Decompose into a matrix
-% for phase and a matrix for magnitude, which should each be of the form
-% [x,y,z,phase,direction], where phase is a temporal dimension. The
-% difference between READNIFTI5D and READDICOM5D is that the DICOM header
-% contains information about the number of dimensions, but the NIFTI header
-% does not. The number of directions is assumed to be 4 in READNIFTI5D.
+% [(mag,slice1,dir1,t1),(mag,slice1,dir1,t2)...(phase,sliceN,dirN,tN)].
+% Decompose into a matrix for phase and a matrix for magnitude, which
+% should each be of the form [x,y,z,phase,direction], where phase is a
+% temporal dimension. The difference between READNIFTI5D and READDICOM5D is
+% that the DICOM header contains information about the number of
+% dimensions, but the NIFTI header does not. The number of directions is
+% assumed to be 4 in READNIFTI5D. Image orientations may also be different
+% if using DICOM.
 %
 % See also getMRESinkus.m, readNIFTI5D, readDICOM5D_Mask
-
+  
+  % Open file
   im = dicomread([p f]);
   im = double(squeeze(im));
   
+  % Metadata
   if exist('/gmrrc/mrbin/dcmdump','file') && isunix()
     [~,result] = system(['dcmdump ' p f...
       ' | grep NumberOfTemporalPositions'...
       '| awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
     nDirs = str2num(result);
-    nPhases = size(im,4) / 2 / nDirs;
+    [~,result] = system(['dcmdump ' p f ...
+      ' | grep "(2001,1018)" | awk ''{print $3}''']);
+    nSlices = str2num(result);
     info = struct();
   else
     info = dicominfo([p f]);
     nDirs   = info.Private_2001_1081;
+    nSlices = info.Private_2001_1018;
   end
+  nX = size(im,1); 
+  nY = size(im,2);
+  nVolumes = size(im,3);
+  nPhases = nVolumes / 2 / nDirs / nSlices;
   
+  % Fill 5D matrices with volumes from 3D matrix
   k1=1;
-  for dir = 1:nDirs,
-    for ph = 1:nPhases,
-      mag(:,:,:,ph,dir) = im(:,:,:,k1);
-      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1);
-      k1 = k1 + 1;
-     end
+  mag = zeros(nX,nY,nSlices,nPhases,nDirs);
+  phase = mag;
+  for slice = 1:nSlices,
+    for dir = 1:nDirs,
+      for ph = 1:nPhases,
+        mag(:,:,slice,ph,dir) = im(:,:,k1);
+        phase(:,:,slice,ph,dir) = im(:,:,nVolumes/2+k1);
+        k1 = k1 + 1;
+       end
+    end
   end
   phase = double(phase)*pi/2048-pi;
   
@@ -171,20 +193,21 @@ function [mag,phase,info] = readDICOM5D_Mask(p,f)
       ' | grep NumberOfTemporalPositions'...
       ' | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
     nDirs = str2num(result);
-    nPhases = size(im,4) / 2 / nDirs;
     info = struct();
   else
     info = dicominfo([p f]);
-    nSlices = info.Private_2001_1018;
+    %nSlices = info.Private_2001_1018;
     nDirs   = info.Private_2001_1081;
   end
+  nVolumes = size(im,4);
+  nPhases = nVolumes / 2 / nDirs;
   
   % Rearrange volumes
   k1=1;
   for dir = 1:nDirs,
     for ph = 1:nPhases,
       mag(:,:,:,ph,dir) = im(:,:,:,k1).* mask;
-      phase(:,:,:,ph,dir) = im(:,:,:,size(im,4) / 2 + k1).* mask;
+      phase(:,:,:,ph,dir) = im(:,:,:,nVolumes / 2 + k1).* mask;
       k1 = k1 + 1;
      end
   end

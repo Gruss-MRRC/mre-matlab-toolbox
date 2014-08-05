@@ -29,7 +29,7 @@ function P = unwrapper(M,P)
   verbose=0; % Toggle debugging flags
   
   % If M or P are empty, open a new file using mri2mat
-  if (isempty(P) || isempty(M)), [M,P,~] = mri2mat(); end
+  if (isempty(P) || isempty(M)), [M,P] = mri2mat(); end
   
   P = mask(P,M,'minimum',180,NaN);
   [nX,nY,nSlices,nPhases,nDirs] = size(P);
