@@ -1,16 +1,11 @@
-function [im_mag, im_phase] = getMREimages(sliceRange,showFig,P_axes,f,p)
+function [im_mag, im_phase] = getMREimages(sliceRange,showFig)
 
 % Extract magnitude and phase images from DICOM files.
 %
 % Inputs:
 %   sliceRange:  Range, e.g., 1:8
 %   showFig:     Display images, true or false (faster with false)
-%   P_axes:      Parent axes handle (where to draw the figure)
-%   f:           .dicom file
-%   p:           path to f
 %   
-%   Retrieve f and p with [f p] = uigetfile('*.dicom')
-%
 % Outputs:
 %   im_mag:      4-D Matrix (x,y,z-slice,phase)
 %   im_phase:    4-D Matrix (x,y,z-slice,phase)
@@ -25,12 +20,15 @@ function [im_mag, im_phase] = getMREimages(sliceRange,showFig,P_axes,f,p)
 %
 % See also getMRESinkus
 
-%[f p] = uigetfile('*.dicom');
+[f p] = uigetfile('*.dicom');
 im1 = double(squeeze(dicomread([p f])));
 
-[status,result] = system(['dcmdump ' p f ' | grep "(2001,1018)" | awk ''{print $3}''']);
+[status,result] = system(['dcmdump ' p f ...
+  ' | grep "(2001,1018)" | awk ''{print $3}''']);
 nSlices = str2num(result);
-[status,result] = system(['dcmdump ' p f ' | grep NumberOfTemporalPositions | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+[status,result] = system(['dcmdump ' p f ...
+  ' | grep NumberOfTemporalPositions'...
+  ' | awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
 nPhases = str2num(result);
 
 for j = 1:2*nSlices,
@@ -42,13 +40,15 @@ end
 im1a_r = im1a(:,:,1:nSlices,:);
 im1a_i = im1a(:,:,nSlices+1:2*nSlices,:);
 
+h=axes(); % figure window for nnUnwrap
 centPos = [];
-%for k = 1:nSlices, 
 for j = sliceRange,
-    [im1a_ph(:,:,:,j),centPos] = nnUnwrap(squeeze(im1a_r(:,:,j,:)),squeeze(im1a_i(:,:,j,:)),1,centPos,showFig,P_axes);
+    [im1a_ph(:,:,:,j),centPos] = nnUnwrap(...
+          squeeze(im1a_r(:,:,j,:)),...
+          squeeze(im1a_i(:,:,j,:)),...
+          1,centPos,showFig,h);
 end
 
-%for j = 1:nSlices,
 for j = sliceRange,
     for k = 1:nPhases,
         im_phase(:,:,j,k) = im1a_ph(:,:,k,j);
