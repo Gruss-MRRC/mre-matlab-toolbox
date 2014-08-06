@@ -425,20 +425,36 @@ nSlices= dims(3); nPhases= dims(4);
 im_mag = handles.images{i}.mag;
 im_phase = handles.images{i}.phase;
 im_unwrap = im_phase;
+
+method = questdlg('Use Fast (nearest-neighbor) or Slow (quality-guided) process to unwrap:', ...
+ 'Unwrap Algorithm', ...
+ 'Fast','Slow','Fast');
+
 %-------------------------5D-------------------------%
-if length(dims) == 5, 
-%     im1a_ph = im_phase;
-%     for dir = 1:dims(5);
-%         for slice = 1:nSlices,
-%             for phase = 1:nPhases,
-%                 im1a_ph(:,:,slice,phase) = QualityGuidedUnwrap2D_r1(...
-%                                   squeeze(im_mag(:,:,slice,phase,dir)),...
-%                                   squeeze(im_phase(:,:,slice,phase,dir)));
-%                 fprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g\n',slice,nSlices,phase,nPhases,dir) 
-%             end
-%         end
-%     end
-    im1a_ph = unwrapper(im_mag,im_phase);
+if length(dims) == 5,
+  switch method
+    case 'Slow'
+      w=waitbar(0,'Progress');
+      tic
+      im1a_ph = im_phase;
+      for dir = 1:dims(5);
+         for slice = 1:nSlices,
+              for phase = 1:nPhases,
+                  im1a_ph(:,:,slice,phase) = QualityGuidedUnwrap2D_r1(...
+                                    squeeze(im_mag(:,:,slice,phase,dir)),...
+                                    squeeze(im_phase(:,:,slice,phase,dir)));
+                 stat = sprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g',slice,nSlices,phase,nPhases,dir); 
+                 waitbar((dir-1+(slice-1+phase/nPhases)/nSLices)/dims(5),w,stat)
+              end
+          end
+      end
+      delete(w)
+      runtime=toc;
+    case 'Fast'
+      tic
+      im1a_ph = unwrapper(im_mag,im_phase);
+      runtime=toc;
+  end
      % Subtract phase due to background field 
     im_ph_P = im1a_ph(:,:,:,:,1)-im1a_ph(:,:,:,:,4); % Phase direction
     im_ph_M = im1a_ph(:,:,:,:,2)-im1a_ph(:,:,:,:,4); % Magnitude direction
@@ -475,26 +491,37 @@ if length(dims) == 5,
     im_unwrap = im1a_ph;
 %------------------------------------4D-----------------------------------%
 else
-%     for slice = 1:nSlices,
-%         for phase = 1:nPhases,
-%             im_unwrap(:,:,slice,phase) = QualityGuidedUnwrap2D_r1(...
-%                               squeeze(im_mag(:,:,slice,phase)),...
-%                               squeeze(im_phase(:,:,slice,phase)));
-% %             im_unwrap(:,:,slice,phase) = GoldsteinUnwrap2D_r1(...
-% %                               squeeze(im_mag(:,:,slice,phase)),...
-% %                               squeeze(im_phase(:,:,slice,phase)));
-%             fprintf('Slice: %g/%g, Phase: %g/%g\n',slice,nSlices,phase,nPhases) 
-%         end
-%     end
-    im_unwrap = unwrapper(im_mag,im_phase);
+  switch method
+    case 'Slow'
+      w=waitbar(0,'Progress');
+      tic
+      for slice = 1:nSlices,
+          for phase = 1:nPhases,
+              im_unwrap(:,:,slice,phase) = QualityGuidedUnwrap2D_r1(...
+                                squeeze(im_mag(:,:,slice,phase)),...
+                                squeeze(im_phase(:,:,slice,phase)));
+  %             im_unwrap(:,:,slice,phase) = GoldsteinUnwrap2D_r1(...
+  %                               squeeze(im_mag(:,:,slice,phase)),...
+  %                               squeeze(im_phase(:,:,slice,phase)));
+              stat=sprintf('Slice: %g/%g, Phase: %g/%g',slice,nSlices,phase,nPhases);
+              waitbar((slice-1+(phase/nPhases))/nSlices,w,stat)
+          end
+      end
+      delete(w)
+      runtime=toc;
+    case 'Fast'
+      tic
+      im_unwrap = unwrapper(im_mag,im_phase);
+      runtime=toc;
+  end
     mean_phase = mean(im_unwrap,4);
     for k = 1:nPhases,
         im_unwrap(:,:,:,k) = im_unwrap(:,:,:,k) - mean_phase(:,:,:);
     end
 end
-
-handles.images{i}.phase = im_unwrap;
-handles.images{i}.mag = im_mag;
+statusMsg(handles,sprintf('Unwrap took %.2f s',runtime))
+handles.images{i}.phase = squeeze(im_unwrap);
+handles.images{i}.mag = squeeze(im_mag);
 handles.activeImg = handles.images{i}.phase(:,:,:,:,1);
 updateCAxis(handles);
 guidata(hObject,handles);

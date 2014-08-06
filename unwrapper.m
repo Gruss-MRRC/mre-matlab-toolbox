@@ -52,7 +52,7 @@ function P = unwrapper(M,P)
       i=i+1; x=X(i); y=Y(i);
     end
     if(verbose), debug(Ps), end
-    P(:,:,phase,slice,dir) = Ps;
+    P(:,:,slice,phase,dir) = Ps;
   end, end, end % end for-loops
 
   

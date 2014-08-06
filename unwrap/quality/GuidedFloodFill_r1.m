@@ -134,4 +134,4 @@ while sum(sum(adjoin(:))) ~= 0  %Loop until there are no more adjoining pixels
   end
   %end
 end % while sum(sum(adjoin(2:r_dim-1,2:c_dim-1))) ~= 0  %Loop until there are no more adjoining pixels
-disp(['All of the valid interior pixels have been calculated']);
+%disp(['All of the valid interior pixels have been calculated']);
