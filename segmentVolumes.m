@@ -128,7 +128,7 @@ function openButton_Callback(hObject, eventdata, handles)
 % volume matrix with [x,y,z] aligned in the Right/Anterior/Superior 
 % coordinate system. Additional volumes add a dimension: [x,y,z,volume_num]
 % In the GUI, the planes are: Axial XY, Coronal XZ, Sagittal YZ.
-[M,~,header] = mri2mat();
+[M,header] = mri2mat();
 handles.M = M;
 
 % Set volume selection slider properties based on number of volumes
@@ -321,7 +321,7 @@ f = [handles.axes1,handles.axes2,handles.axes3];
 M = handles.M;
 pt = handles.pt;
 colormap gray
-axis equal
+axis tight
 
 % Cut out the selected region if selection is complete
 c = handles.cut;

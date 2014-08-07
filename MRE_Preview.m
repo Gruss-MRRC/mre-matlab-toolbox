@@ -444,7 +444,7 @@ if length(dims) == 5,
                                     squeeze(im_mag(:,:,slice,phase,dir)),...
                                     squeeze(im_phase(:,:,slice,phase,dir)));
                  stat = sprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g',slice,nSlices,phase,nPhases,dir); 
-                 waitbar((dir-1+(slice-1+phase/nPhases)/nSLices)/dims(5),w,stat)
+                 waitbar((dir-1+(slice-1+phase/nPhases)/nSlices)/dims(5),w,stat)
               end
           end
       end
