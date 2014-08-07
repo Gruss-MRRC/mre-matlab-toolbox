@@ -9,7 +9,7 @@ function varargout = MRE_Preview(varargin)
 
 % Edit the above text to modify the response to help MRE_Preview
 
-% Last Modified by GUIDE v2.5 05-Aug-2014 10:53:42
+% Last Modified by GUIDE v2.5 06-Aug-2014 20:06:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -263,8 +263,8 @@ function openFile(hObject,handles)
 
 statusMsg(handles,'Opening...');
 
-[mag,phase] = mri2mat();
-
+[mag,phase,info] = mri2mat();
+handles.header = info;
 i = handles.curImg;
 nSlices = size(mag,3);
 nPhases = size(mag,4);
@@ -526,3 +526,12 @@ handles.activeImg = handles.images{i}.phase(:,:,:,:,1);
 updateCAxis(handles);
 guidata(hObject,handles);
 redraw(handles);
+
+
+function saveBtn_ClickedCallback(hObject, eventdata, handles)
+% Save to disk
+header = handles.header;
+matfile   = [header.path strtok(header.filename,'.') '.mat'];
+M = handles.images{handles.curImg}.mag;
+P = handles.images{handles.curImg}.phase;
+save(matfile, 'header', 'M', 'P');

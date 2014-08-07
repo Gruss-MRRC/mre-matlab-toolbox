@@ -33,7 +33,8 @@ function [mag, varargout] = mri2mat()
     '*.dicom', '3D DICOM to 5D Mag & Phase Matrices with NIFTI mask';...
     '*.nii',   '4D NIFTI to 5D Mag & Phase Matrices';...
     '*.nii',   'NIFTI File';...
-    '*.nii.gz','NIFTI Archive';});
+    '*.nii.gz','NIFTI Archive';...
+    '*.mat',   'MAT File from MRE_Preview';});
   
 % Do something based on filetype
 switch index
@@ -55,6 +56,12 @@ switch index
   case 6 % NIFTI archive
     [mag,info] = readNIFTI(p,f);
     no_phase = true;
+  case 7 % MAT file
+    vars = open([p f]);
+    mag = vars.M;
+    phase = vars.P;
+    info = vars.header;
+    no_phase = false;
 end
 
 % Add data about which file was opened to header info
