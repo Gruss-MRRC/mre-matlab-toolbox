@@ -58,11 +58,16 @@ function P = unwrapper(M,P)
   
 function A = mask(A,B,mode,threshold,value)
 % Apply a mask to `A` if the corresponding value in `B` is below the
-% threshold value in `B`. The threshold can be set to either a range, a
-% percentage of the peak value, or a hard limit by setting `mode` to 
-% 'range', 'factor', or 'minimum', respectively. `Value` is the value that 
-% masked elements will take.
-% A and B must be the same size
+% threshold value in `B`. `Value` is the value that masked elements will
+% take. A and B must be the same size. 
+% Modes (element in A gets `value` if...):
+% factor:       element in B less then `threshold` times B's peak value
+% minumum:      element in B less than `threshold`
+% rangeExclude: element in B outside of `threshold` range
+% rangeInclude: element in B inside of `threshold` range
+% stdDev:       element in B more than `threshold` standard deviations
+%               below the mean in B
+% binary:       element in B equals 0 (B is a binary mask)
   switch mode
     case 'factor'
       m = max(B(:));
@@ -75,6 +80,8 @@ function A = mask(A,B,mode,threshold,value)
       A(B<threshold(1) | B>threshold(2)) = value;
     case 'stdDev'
       A(B<(mean(B)-threshold*std(B))) = value;
+    case 'binary'
+        A(~B) = value;
   end
 
   
