@@ -181,7 +181,9 @@ function calculateButton_Callback(hObject, eventdata, handles)
 header = handles.header;
 M = handles.M;
 v = round(get(handles.volumeSelect,'Value'));
-L = labelmatrix(bwconncomp(M(:,:,:,v))); % find and label connected regions
+rad = 5;
+E = imerode(M(:,:,:,v),strel('disk',rad));
+L = labelmatrix(bwconncomp(E)); % find and label connected regions
 L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 % disp('<Volume Histogram>')
 % group_histogram = histc(L(:),0:max(L(:)))
@@ -192,14 +194,15 @@ Lslice = L(:,:,handles.pt(3)); % the active axial slice
 % want to use for the volume calculation
 h = figure; 
 colormap jet
-imagesc(Lslice,[0 10]) % TODO don't hardcode the color axis, use histogram
+imagesc(imdilate(Lslice,strel('disk',rad)))%,[0 10]) % TODO don't hardcode the color axis, use histogram
 coords = round(ginput(h)); % get label of the region the user wants to see
 val = Lslice(coords(2),coords(1)); % get value of the label (probably 1 or 2)
 
 % Volume calculation
 [space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
 pixdim = handles.header.dime.pixdim(2:4); % voxel dimensions in real units
-voxels = sum(L(:)==val); % total voxels in selected region
+D = imdilate(L(:)==val,strel('disk',rad));
+voxels = sum(D); % total voxels in selected region
 volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % vox -> cubic meters
 
 % Display volume
