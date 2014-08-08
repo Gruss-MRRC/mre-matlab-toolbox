@@ -156,11 +156,11 @@ update_Axes(hObject,handles);
 figure
 D = M(round(dims(1)/2):end,:,:,1); % split along sagittal plane
 Ds = smooth3(D);
-hiso = patch(isosurface(Ds,5),...
+hiso = patch(isosurface(Ds,0),...
 	'FaceColor',[.5,.5,.8],...
 	'EdgeColor','none');
 	isonormals(Ds,hiso)
-hcap = patch(isocaps(D,5),...
+hcap = patch(isocaps(D,0),...
 	'FaceColor','interp',...
 	'EdgeColor','none');
 view(35,30) 
@@ -180,29 +180,41 @@ function calculateButton_Callback(hObject, eventdata, handles)
 % Region selection and isolation
 header = handles.header;
 M = handles.M;
-v = round(get(handles.volumeSelect,'Value'));
-rad = 5;
-E = imerode(M(:,:,:,v),strel('disk',rad));
+v = handles.pt(4);
+
+% Parameters for erosion/dilation
+rad = 4;
+[xx,yy,zz] = ndgrid(-rad:rad);
+%nhood = sqrt(xx.^2 + yy.^2 + zz.^2) <= rad;
+nhood = strel('square',rad);
+
+% Erode image
+E = imerode(M(:,:,:,v),nhood);
+
+% Label connected components
 L = labelmatrix(bwconncomp(E)); % find and label connected regions
 L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
+Lslice = L(:,:,handles.pt(3)); % the active axial slice
+
 % disp('<Volume Histogram>')
 % group_histogram = histc(L(:),0:max(L(:)))
 % [~,index] = max(group_histogram);
 % disp('</Volume Histogram>')
-Lslice = L(:,:,handles.pt(3)); % the active axial slice
+
+% Ask for selection
 % Show the user `Lslice` and ask them to click on the colored region they
 % want to use for the volume calculation
-h = figure; 
-colormap jet
-imagesc(imdilate(Lslice,strel('disk',rad)))%,[0 10]) % TODO don't hardcode the color axis, use histogram
-coords = round(ginput(h)); % get label of the region the user wants to see
-val = Lslice(coords(2),coords(1)); % get value of the label (probably 1 or 2)
+floatingFig=figure;
+colormap jet;
+imagesc(Lslice)%,[0 10]) % TODO don't hardcode the color axis, use histogram
+coords = round(ginput(1)); % get label of the region the user wants to see
+val = Lslice(coords(2),coords(1)); % get value of the label
 
 % Volume calculation
 [space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
 pixdim = handles.header.dime.pixdim(2:4); % voxel dimensions in real units
-D = imdilate(L(:)==val,strel('disk',rad));
-voxels = sum(D); % total voxels in selected region
+D = imdilate(L(:)==val,nhood);
+voxels = sum(D); % add up total voxels in selected region
 volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % vox -> cubic meters
 
 % Display volume
@@ -211,26 +223,21 @@ statusMsg(handles,volumeMsg);
 fprintf([volumeMsg '\n']);
 
 % 3D image of selected region
+clf(floatingFig)
 Z = L==val;
-figure(h)
 D = M(:,:,:,1).*Z;
 Ds = smooth3(D);
-hiso = patch(isosurface(Ds,5),...
-	'FaceColor',[.5,.5,.8],...
-	'EdgeColor','none');
-	isonormals(Ds,hiso)
-view(35,30) 
-axis tight 
-daspect([1,1,1])
-lightangle(90,0);
-set(gcf,'Renderer','opengl'); lighting phong
-set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
+isosurface(Ds,0)
 
 % Save to disk
 matfile   = [header.path strtok(header.filename,'.') '.mat'];
 imagefile = [header.path strtok(header.filename,'.') '.fig'];
-saveas(h,imagefile);
+saveas(floatingFig,imagefile);
 save(matfile, 'header', 'M', 'L', 'volume');
+
+% Save handles
+handles.volume = volume;
+guidata(hObject, handles);
 
 
 function [space_units,time_units] = nifti_units_lookup(code)
