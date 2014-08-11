@@ -72,7 +72,7 @@ info.path = p;
 if nargout == 3, 
   varargout{1} = phase; 
   varargout{2} = info; % return mag, phase, and info
-elseif nargout == 2 &&  no_phase, 
+elseif nargout == 2 && no_phase, 
   varargout{1} = info; % return mag and info
 elseif nargout == 2 && ~no_phase,
   varargout{1} = phase; % return mag and phase

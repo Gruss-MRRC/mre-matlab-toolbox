@@ -67,7 +67,7 @@ function varargout = segmentVolumes(varargin)
 
 % Edit the above text to modify the response to help segmentVolumes
 
-% Last Modified by GUIDE v2.5 30-Jul-2014 14:53:24
+% Last Modified by GUIDE v2.5 11-Aug-2014 17:32:44
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -99,12 +99,23 @@ function segmentVolumes_OpeningFcn(hObject, eventdata, handles, varargin)
 
 % Choose default command line output for segmentVolumes
 handles.output = hObject;
+
+% SETUP
 handles.M = [];
 pt = [1,1,1,1];
 handles.pt = pt;
 handles.volume = 1;
 handles.cut = {[],[],[],[]};
 handles.ptSelect =1;
+
+% Parameters for erosion/dilation
+rad = 1;
+[xx,yy,zz] = ndgrid(-rad:rad);
+nhood = sqrt(xx.^2 + yy.^2 + zz.^2) <= rad;
+handles.nhood = nhood;
+
+
+% END SETUP
 
 % Update handles structure
 guidata(hObject, handles);
@@ -128,12 +139,20 @@ function openButton_Callback(hObject, eventdata, handles)
 % volume matrix with [x,y,z] aligned in the Right/Anterior/Superior 
 % coordinate system. Additional volumes add a dimension: [x,y,z,volume_num]
 % In the GUI, the planes are: Axial XY, Coronal XZ, Sagittal YZ.
+
+% Open file
 [M,header] = mri2mat();
-handles.M = M;
 
 % Set volume selection slider properties based on number of volumes
 % detected
 dims = size(M);
+if dims(1)>=512 % most likely an up-sampled image
+  M = impyramid(M,'reduce'); % downsample by a factor of 2
+  % scale pixel dimensions accordingly (see nifti_units_lookup function):
+  header.dime.pixdim(2:3) = header.dime.pixdim(2:3)*2; 
+  dims = size(M); % get new dimensions
+end
+if length(dims)==2, dims(3)=1; end % pad dims if only 2D
 if length(dims)==3, dims(4)=1; end % pad dims if only 3D
 set(handles.volumeSelect,'Max',dims(4)+.01);
 set(handles.volumeSelect,'Min',1)
@@ -143,17 +162,22 @@ set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
 % The next line sets the starting point to the middle of the brain.
 pt = ceil(dims/2); 
 set(handles.volumeSelect,'Value',pt(4));
+handles.M = M;
 handles.pt = pt;
 handles.header = header;
 statusMsg(handles,sprintf('%s %s',...
   'Right-click twice in the sagittal plane to outline a cut,',...
   'then twice in the coronal plane to set the width.'))
 
+updateVolume(handles)
+
 guidata(hObject, handles);
 update_Axes(hObject,handles);
 
 % 3D image
-figure
+% Create a floating figure window
+handles.floatingFig = figure('name','3D View');
+colormap gray
 D = M(round(dims(1)/2):end,:,:,1); % split along sagittal plane
 Ds = smooth3(D);
 hiso = patch(isosurface(Ds,0),...
@@ -165,14 +189,15 @@ hcap = patch(isocaps(D,0),...
 	'EdgeColor','none');
 view(35,30) 
 axis tight 
-daspect([1,1,1])
+pixdim = header.dime.pixdim(2:4); % get voxel dimensions
+daspect(1./[pixdim(1),pixdim(2),pixdim(3)]) % scale proportional to voxel shape
 lightangle(90,0);
 set(gcf,'Renderer','opengl'); lighting phong
 set(hcap,'AmbientStrength',1)
 set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
 
 
-function calculateButton_Callback(hObject, eventdata, handles)
+function isolateButton_Callback(hObject, eventdata, handles)
 % Ask user to select which subvolume they want to calculate, then calculate
 % volume and display a 3D image of the region. Save the matrices and figure
 % to disk.
@@ -181,63 +206,45 @@ function calculateButton_Callback(hObject, eventdata, handles)
 header = handles.header;
 M = handles.M;
 v = handles.pt(4);
-
-% Parameters for erosion/dilation
-rad = 4;
-[xx,yy,zz] = ndgrid(-rad:rad);
-%nhood = sqrt(xx.^2 + yy.^2 + zz.^2) <= rad;
-nhood = strel('square',rad);
-
-% Erode image
-E = imerode(M(:,:,:,v),nhood);
+M = M(:,:,:,v);
 
 % Label connected components
-L = labelmatrix(bwconncomp(E)); % find and label connected regions
-L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
-Lslice = L(:,:,handles.pt(3)); % the active axial slice
+  L = labelmatrix(bwconncomp(M)); % find and label connected regions
+  %L(L(:)==0) = NaN; % set all background (0) values to NaN to avoid counting
 
-% disp('<Volume Histogram>')
-% group_histogram = histc(L(:),0:max(L(:)))
-% [~,index] = max(group_histogram);
-% disp('</Volume Histogram>')
+  % Sort labeled regions by volume
+  s = regionprops(L, {'Area', 'PixelIdxList'});
+  areas = cat(1, s.Area);
+  [~, sort_order] = sort(areas,'descend');
+  s2 = s(sort_order);
+  for k = 1:numel(s2)
+     pixelids = s2(k).PixelIdxList;
+     L(pixelids) = k;
+  end
 
-% Ask for selection
-% Show the user `Lslice` and ask them to click on the colored region they
-% want to use for the volume calculation
-floatingFig=figure;
-colormap jet;
-imagesc(Lslice)%,[0 10]) % TODO don't hardcode the color axis, use histogram
-coords = round(ginput(1)); % get label of the region the user wants to see
-val = Lslice(coords(2),coords(1)); % get value of the label
+  Lslice = L(:,:,handles.pt(3)); % the active axial slice
+  % Ask for selection
+  % Show the user `Lslice` and ask them to click on the colored region they
+  % want to use for the volume calculation
+  figure
+  colormap jet;
+  imagesc(Lslice,[0 15]);
+  coords = round(ginput(1)); % get label of the region the user wants to see
+  val = Lslice(coords(2),coords(1)); % get value of the label
 
-% Volume calculation
-[space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
-pixdim = handles.header.dime.pixdim(2:4); % voxel dimensions in real units
-D = imdilate(L(:)==val,nhood);
-voxels = sum(D); % add up total voxels in selected region
-volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % vox -> cubic meters
+  M(L~=val) = 0; % trim N
 
-% Display volume
-volumeMsg = sprintf('Volume of selected region: %g mL',volume*1E6); % m^3 -> mL
-statusMsg(handles,volumeMsg);
-fprintf([volumeMsg '\n']);
-
-% 3D image of selected region
-clf(floatingFig)
-Z = L==val;
-D = M(:,:,:,1).*Z;
-Ds = smooth3(D);
-isosurface(Ds,0)
 
 % Save to disk
-matfile   = [header.path strtok(header.filename,'.') '.mat'];
-imagefile = [header.path strtok(header.filename,'.') '.fig'];
-saveas(floatingFig,imagefile);
-save(matfile, 'header', 'M', 'L', 'volume');
+%matfile   = [header.path strtok(header.filename,'.') '.mat'];
+%imagefile = [header.path strtok(header.filename,'.') '.fig'];
+%saveas(floatingFig,imagefile);
+%save(matfile, 'header', 'M', 'ventricles', 'volume');
 
-% Save handles
-handles.volume = volume;
-guidata(hObject, handles);
+statusMsg(handles,'Segment isolation complete')
+handles.M(:,:,:,v) = M;
+guidata(hObject,handles)
+update_Axes(hObject,handles)
 
 
 function [space_units,time_units] = nifti_units_lookup(code)
@@ -332,15 +339,27 @@ M = handles.M;
 pt = handles.pt;
 colormap gray
 axis tight
-
+get(handles.selectModeMenu,'Value')
 % Cut out the selected region if selection is complete
+% If selection mode is 'Select', cut out everything else
 c = handles.cut;
 if ~isempty(c{1}) && ~isempty(c{2}) && ~isempty(c{3}) && ~isempty(c{4})
-  M(min([c{3}(1),c{4}(1)]) : max([c{3}(1),c{4}(1)]),... % X extent
-    min([c{1}(2),c{2}(2)]) : max([c{1}(2),c{2}(2)]),... % Y extent
-    min([c{1}(3),c{2}(3)]) : max([c{1}(3),c{2}(3)]),... % Z extent
-    c{1}(4)) = 0;
-  handles.cut = {[],[],[],[]}; %reset selection
+  switch get(handles.selectModeMenu,'Value')
+    case 2
+      M(min([c{3}(1),c{4}(1)]) : max([c{3}(1),c{4}(1)]),... % X extent
+        min([c{1}(2),c{2}(2)]) : max([c{1}(2),c{2}(2)]),... % Y extent
+        min([c{1}(3),c{2}(3)]) : max([c{1}(3),c{2}(3)]),... % Z extent
+        c{1}(4)) = 0;
+      handles.cut = {[],[],[],[]}; %reset selection
+    case 1
+      Z = zeros(size(M));
+      Z(min([c{3}(1),c{4}(1)]) : max([c{3}(1),c{4}(1)]),... % X extent
+        min([c{1}(2),c{2}(2)]) : max([c{1}(2),c{2}(2)]),... % Y extent
+        min([c{1}(3),c{2}(3)]) : max([c{1}(3),c{2}(3)]),... % Z extent
+        c{1}(4)) = 1;
+      handles.cut = {[],[],[],[]}; %reset selection
+      M(Z==0) = 0;
+  end
   handles.M = M; %save changes
   guidata(hObject,handles)
 end
@@ -353,6 +372,7 @@ imagesc(squeeze(M(:,:,pt(3),pt(4))),'Parent',f(2),'HitTest','off');
 imagesc(transpose(squeeze(M(pt(1),:,:,pt(4)))),'Parent',f(3),'HitTest','off');
 for i=1:3, axis(f(i),'tight'); end
 updateCoords(handles)
+updateVolume(handles)
 guidata(hObject,handles)
 
 
@@ -385,7 +405,7 @@ x = h.pt(1);
 y = h.pt(2);
 z = h.pt(3);
 set(h.coords,'String',...
-  sprintf('%g,%g,%g',x,y,z));
+  sprintf('(%g,%g,%g)',x,y,z));
 pause(.01)
 
 
@@ -412,3 +432,76 @@ switch eventdata.Key
     statusMsg(handles,'Undid click.')
 end
 guidata(hObject,handles)
+
+
+function view3DBtn_Callback(hObject, eventdata, handles)
+% 3D image of selected region
+header = handles.header;
+M = handles.M;
+v = handles.pt(4);
+M = M(:,:,:,v)>0;
+figure('name','3D View')
+Ds = smooth3(M);
+isosurface(Ds,0)
+pixdim = header.dime.pixdim(2:4); % get voxel dimensions
+daspect(1./[pixdim(1),pixdim(2),pixdim(3)]) % scale proportional to voxel shape
+
+function selectModeMenu_Callback(hObject, eventdata, handles)
+
+
+function selectModeMenu_CreateFcn(hObject, eventdata, handles)
+
+% Hint: popupmenu controls usually have a white background on Windows.
+%       See ISPC and COMPUTER.
+if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
+    set(hObject,'BackgroundColor','white');
+end
+
+
+function erodeBtn_Callback(hObject, eventdata, handles)
+M = handles.M;
+nhood = handles.nhood;
+v = handles.pt(4);
+M = M(:,:,:,v);
+M = imerode(M,nhood);
+statusMsg(handles,'Erosion complete')
+handles.M(:,:,:,v) = M;
+guidata(hObject,handles)
+update_Axes(hObject,handles)
+
+function dilateBtn_Callback(hObject, eventdata, handles)
+M = handles.M;
+nhood = handles.nhood;
+v = handles.pt(4);
+M = M(:,:,:,v);
+M = imdilate(M,nhood);
+statusMsg(handles,'Dilation complete')
+handles.M(:,:,:,v) = M;
+guidata(hObject,handles)
+update_Axes(hObject,handles)
+
+function volumeTxt_ButtonDownFcn(hObject, eventdata, handles)
+updateVolume(handles);
+
+function updateVolume(handles)
+% calculate volume of active region
+
+header = handles.header;
+M = handles.M;
+v = handles.pt(4);
+M = M(:,:,:,v)>0;
+
+% Volume calculation
+[space_units,~] = nifti_units_lookup(header.dime.xyzt_units);
+pixdim = handles.header.dime.pixdim(2:4); % voxel dimensions in real units
+voxels = sum(M(:)>0); % add up total voxels in selected region
+volume = voxels*pixdim(1)*pixdim(2)*pixdim(3)*space_units^3; % vox -> cubic meters
+
+% Display volume
+volume_mL = volume*1E6; % cubic meters -> milliters
+volumeStr = sprintf('%.1f mL',volume_mL); 
+%fprintf([volumeStr '\n']);
+
+% Update volume text box
+set(handles.volumeTxt,'String',volumeStr);
+pause(.01)
