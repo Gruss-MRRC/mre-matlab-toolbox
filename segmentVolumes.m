@@ -229,17 +229,15 @@ M = M(:,:,:,v);
   figure
   colormap jet;
   imagesc(Lslice,[0 15]);
-  coords = round(ginput(1)); % get label of the region the user wants to see
-  val = Lslice(coords(2),coords(1)); % get value of the label
-
-  M(L~=val) = 0; % trim N
-
-
-% Save to disk
-%matfile   = [header.path strtok(header.filename,'.') '.mat'];
-%imagefile = [header.path strtok(header.filename,'.') '.fig'];
-%saveas(floatingFig,imagefile);
-%save(matfile, 'header', 'M', 'ventricles', 'volume');
+  title 'Select regions to keep. Press enter when finished.'
+  coords = round(ginput()); % get label of the region the user wants to see
+  temp = zeros(size(M));
+  for i = 1:size(coords,1)
+    val = Lslice(coords(i,2),coords(i,1)); % get value of the label
+    temp(L==val) = M(L==val);
+  end
+  
+M = temp;
 
 statusMsg(handles,'Segment isolation complete')
 handles.M(:,:,:,v) = M;
@@ -339,7 +337,6 @@ M = handles.M;
 pt = handles.pt;
 colormap gray
 axis tight
-get(handles.selectModeMenu,'Value')
 % Cut out the selected region if selection is complete
 % If selection mode is 'Select', cut out everything else
 c = handles.cut;
