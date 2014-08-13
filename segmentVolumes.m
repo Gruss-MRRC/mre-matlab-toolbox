@@ -1,61 +1,87 @@
 function varargout = segmentVolumes(varargin)
 % SEGMENTVOLUMES Isolate and calculate volume of structures in MRI images.
 % 
-% Suggested purpose is to find the volume of the ventricles in the human
-% brain using T1 MRI images, but may be useful in other situations.
-%
-% Opening files: 
-% Open a NIFTI or DICOM image by clicking "Open". MRI2MAT returns
-% the image data and metadata in Matlab matrix format. Coronal, Axial, and
-% Sagittal slices are shown in the XZ, XY, and YZ preview planes,
-% respectively. (If not, try preprocessing the images with `dcm2nii` and
-% FSL's `bet` and `fast` programs or editing the matrices directly in
-% Matlab.) A 3D preview of the brain sliced along the sagittal plane is
-% also shown in a separate window, which may be closed if desired.
+% Opening files 
+% -------------
+% Open a NIFTI or DICOM image by clicking "Open". MRI2MAT returns the image
+% data and metadata in Matlab matrix format. Coronal, Axial, and Sagittal
+% slices are shown in the XZ, XY, and YZ preview planes, respectively. (If
+% not, try preprocessing the images with `dcm2nii` and FSL's `bet` and
+% `fast` programs or editing the matrices directly in Matlab.) A 3D preview
+% of the brain sliced along the sagittal plane is also shown in a separate
+% window, which may be closed without causing problems. NOTE: If the file
+% is 4D, the 'Series' slider changes which volume (3D) is shown. Operations 
+% like `Isolate` apply only to the active Series.
 % 
-% Navigation: 
+% Navigation
+% ----------
 % Left-clicking in any image plane adjusts the other image planes so that
 % they are aligned with that coordinate. E.g., clicking (y,z) = (10,20) in
 % the sagittal plane shows slice 20 in the axial window and a slice with
 % y=10 in the coronal plane. If open file has more than three dimensions,
 % for example if the NIFTI file contains a breakdown of CSF, gray matter,
-% and white matter as separate volumes, the "Select volume" slider changes
-% which volume is being displayed.
+% and white matter as separate volumes, the "Series" slider changes
+% th active volume (affects 4D images only).
 %
-% Calculating volume:
-% The volume of a region may be determined by clicking "Calculate." The
-% program first segments the selected volume by connectivity, finding
-% continous non-zero elements in the matrix and assigning labels to each
-% discrete body. The user is shown a view of the axial plane with each of
-% these regions color-coded. Clicking a region isolates it. The image
-% header (NIFTI) or DICOM is read and used to calculate the units and
-% dimensions of each voxel. The volume is printed to the command window and
-% status bar in the GUI, with units of mL. A 3D view of just the selected
-% region is shown, which can be used to determine if the correct selection
-% was made and is intact.
+% Isolating Regions by Connectivity
+% ---------------------------------
+% The volume can be reduced to include only specific regions by by clicking
+% "Isolate." The program segments the selected volume by connectivity,
+% finding continous non-zero elements in the matrix and assigning labels to
+% each discrete body. The user is shown a view of the axial plane with each
+% of these regions color-coded. Clicking a region adds it to the selection.
+% Selection continues until the user presses Enter.
 %
-% Placing cuts:
+% How Volume is Calculated
+% ------------------------
+% Every time the view updates, volume is recalculated. The NIFTI image
+% header is read to determine the units (m, cm, mm) and dimensions of the
+% voxels. The volume is calculated as the sum of all non-zero voxels in the
+% matrix.
+%
+% Select/Cut
+% ----------
 % To separate the desired region from other connected bodies, you can
-% manually remove pieces of the image. To do so, you need to right-click 4
+% manually remove pieces of the image. To do so, right-click 4
 % points which define a box. The first 2 points determine the Y and Z
 % extents of the cut; the second 2 determine the extents in X. Think of
 % this as describing a rectangle in the sagittal plane and then setting its
-% width in the coronal or axial planes. There isn't a preview of the cut in
-% this version, but there is an undo (see below).
+% width in the coronal or axial planes. The action taken depends on the
+% value of "Selection":
 %
-% Undo:
+%   "Cut"    -- Everything inside the box is set to 0
+%   "Select" -- Everything outside the box is set to 0
+% 
+% Erode/Dilate
+% ------------
+% The "Erode" and "Dilate" buttons execute the Matlab Image Processing
+% Toolbox functions `imerode` and `imdilate`. Erosion can be useful to
+% break small connections between regions, but should be used sparingly
+% because the effect can be quite destructive. Dilation is the inverse
+% operation of erode, but doesn't necessarily 'undo' an erosion.%
+%
+% Undo
+% ----
 % Pressing the "Backspace" key clears the last point from the cut
-% selection. The "<<" button clears the entire active cut selection. There
-% isn't a function to reset a cut that has been already made.
+% selection. The "<<" button clears the entire active cut selection. NOTE:
+% There isn't a function to reset a cut that has been already made.
 %
-% Outputs/Side Effects:
-% After "Calculate" is pressed, the entire matrix is saved in a .mat-file
-% along with the isolated volume, the image header, and the value of the
-% volume. The 3D volume preview  is saved in a .fig file. Both files are
-% saved into the same directory as the original image, with the same
-% filename.
+% 3D View
+% -------
+% The "3D" button pops open a new window containing a 3D isosurface of the
+% current volume.
 %
-% Dependencies:
+% Saving
+% ------
+% Clicking the "Save" button in the toolbar saves the image matrix in a
+% .mat-file along with the image header (metadata) and the volume with
+% units. The file has the same name and is saved in the same folder as the
+% opened image. The path, filename, and volume are added to the .csv file
+% in the "Log" text box at the top of the GUI. A warning dialog appears if
+% for some reason either file cannot be saved (i.e., a permissions error).
+%
+% Dependencies
+% ------------
 % MRI2MAT: Convert NIFTI and DICOM images to matrix format
 % GUIDE:   GUI created using GUIDE toolbox
 % Matlab Image Processing Toolbox
@@ -63,11 +89,11 @@ function varargout = segmentVolumes(varargin)
 % Author:
 % Alex Krolick <amk283@cornell.edu>
 %
-% See also: MRI2MAT, segmentVolumes.fig
+% See also: MRI2MAT, IMERODE, IMDILATE, segmentVolumes.fig
 
 % Edit the above text to modify the response to help segmentVolumes
 
-% Last Modified by GUIDE v2.5 11-Aug-2014 17:32:44
+% Last Modified by GUIDE v2.5 13-Aug-2014 10:34:05
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -502,3 +528,51 @@ volumeStr = sprintf('%.1f mL',volume_mL);
 % Update volume text box
 set(handles.volumeTxt,'String',volumeStr);
 pause(.01)
+
+
+function saveBtn_ClickedCallback(hObject, eventdata, handles)
+% Save GUI data to disk
+
+% Inputs
+header = handles.header;
+M = handles.M;
+volume = get(handles.volumeTxt,'String'); % e.g., '0.00 mL'
+
+% Outputs
+% - save a .mat file next to the original data file
+% - append metadata and volume to a log file in the current directory
+matfile = [header.path strtok(header.filename,'.') '.mat']; 
+csvname = get(handles.csvFileBox,'String');
+csvfile = fopen(csvname,'a'); % open with append-only permissions
+
+% Write files
+try
+  fprintf(csvfile,['\n' '"' header.path '","' header.filename '","' volume '"']);
+catch
+  errordlg(['Couldn''t write to ' csvname])
+  errflag = true;
+end
+try
+  save(matfile, 'header', 'M', 'volume');
+catch
+   errordlg(['Couldn''t write to ' matfile])
+   errflag = true;
+end
+
+% Close
+fclose(csvfile);
+
+% Update dialog
+switch exist('errflag','var')
+  case true
+    statusMsg(handles,'Save failed.')
+  case false
+    statusMsg(handles,'Saved.')
+end
+
+
+function csvFileBox_Callback(hObject, eventdata, handles)
+
+
+function csvFileBox_CreateFcn(hObject, eventdata, handles)
+set(hObject,'String',[pwd '/Volumes.csv']);
