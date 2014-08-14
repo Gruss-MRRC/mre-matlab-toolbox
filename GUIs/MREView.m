@@ -452,7 +452,7 @@ if length(dims) == 5,
       runtime=toc;
     case 'Fast'
       tic
-      im1a_ph = unwrapper(im_mag,im_phase);
+      im1a_ph = fastUnwrap(im_mag,im_phase);
       runtime=toc;
   end
      % Subtract phase due to background field 
@@ -511,7 +511,7 @@ else
       runtime=toc;
     case 'Fast'
       tic
-      im_unwrap = unwrapper(im_mag,im_phase);
+      im_unwrap = fastUnwrap(im_mag,im_phase);
       runtime=toc;
   end
     mean_phase = mean(im_unwrap,4);

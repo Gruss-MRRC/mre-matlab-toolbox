@@ -1,5 +1,5 @@
 function varargout = segmentVolumes(varargin)
-% SEGMENTVOLUMES Isolate and calculate volume of structures in MRI images.
+% Isolate and calculate volume of structures in MRI images.
 % 
 % Opening files 
 % -------------
@@ -9,7 +9,7 @@ function varargout = segmentVolumes(varargin)
 % not, try preprocessing the images with `dcm2nii` and FSL's `bet` and
 % `fast` programs or editing the matrices directly in Matlab.) A 3D preview
 % of the brain sliced along the sagittal plane is also shown in a separate
-% window, which may be closed without causing problems. NOTE: If the file
+% window, which may be closed without causing problems. Note: If the file
 % is 4D, the 'Series' slider changes which volume (3D) is shown. Operations 
 % like `Isolate` apply only to the active Series.
 % 
@@ -22,7 +22,7 @@ function varargout = segmentVolumes(varargin)
 % for example if the NIFTI file contains a breakdown of CSF, gray matter,
 % and white matter as separate volumes, the "Series" slider changes
 % th active volume (affects 4D images only).
-%
+% 
 % Isolating Regions by Connectivity
 % ---------------------------------
 % The volume can be reduced to include only specific regions by by clicking
@@ -31,24 +31,24 @@ function varargout = segmentVolumes(varargin)
 % each discrete body. The user is shown a view of the axial plane with each
 % of these regions color-coded. Clicking a region adds it to the selection.
 % Selection continues until the user presses Enter.
-%
+% 
 % How Volume is Calculated
 % ------------------------
 % Every time the view updates, volume is recalculated. The NIFTI image
 % header is read to determine the units (m, cm, mm) and dimensions of the
 % voxels. The volume is calculated as the sum of all non-zero voxels in the
 % matrix.
-%
+% 
 % Select/Cut
 % ----------
 % To separate the desired region from other connected bodies, you can
-% manually remove pieces of the image. To do so, right-click 4
-% points which define a box. The first 2 points determine the Y and Z
-% extents of the cut; the second 2 determine the extents in X. Think of
-% this as describing a rectangle in the sagittal plane and then setting its
-% width in the coronal or axial planes. The action taken depends on the
-% value of "Selection":
-%
+% manually remove pieces of the image. To do so, right-click 4 points which
+% define a box. The first 2 points determine the Y and Z extents of the
+% cut; the second 2 determine the extents in X. Think of this as describing
+% a rectangle in the sagittal plane and then setting its width in the
+% coronal or axial planes. The action taken depends on the value of
+% "Selection":
+% 
 %   "Cut"    -- Everything inside the box is set to 0
 %   "Select" -- Everything outside the box is set to 0
 % 
@@ -59,18 +59,18 @@ function varargout = segmentVolumes(varargin)
 % break small connections between regions, but should be used sparingly
 % because the effect can be quite destructive. Dilation is the inverse
 % operation of erode, but doesn't necessarily 'undo' an erosion.%
-%
+% 
 % Undo
 % ----
 % Pressing the "Backspace" key clears the last point from the cut
-% selection. The "<<" button clears the entire active cut selection. NOTE:
+% selection. The "<<" button clears the entire active cut selection. Note:
 % There isn't a function to reset a cut that has been already made.
-%
+% 
 % 3D View
 % -------
 % The "3D" button pops open a new window containing a 3D isosurface of the
 % current volume.
-%
+% 
 % Saving
 % ------
 % Clicking the "Save" button in the toolbar saves the image matrix in a
@@ -79,22 +79,22 @@ function varargout = segmentVolumes(varargin)
 % opened image. The path, filename, and volume are added to the .csv file
 % in the "Log" text box at the top of the GUI. A warning dialog appears if
 % for some reason either file cannot be saved (i.e., a permissions error).
-%
+% 
 % Dependencies
 % ------------
 % MRI2MAT: Convert NIFTI and DICOM images to matrix format
 % GUIDE:   GUI created using GUIDE toolbox
 % Matlab Image Processing Toolbox
-%
+% 
 % Author:
 % Alex Krolick <amk283@cornell.edu>
-%
+% 
 % See also: MRI2MAT, IMERODE, IMDILATE, segmentVolumes.fig
-
+% 
 % Edit the above text to modify the response to help segmentVolumes
-
+% 
 % Last Modified by GUIDE v2.5 13-Aug-2014 10:34:05
-
+%
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...

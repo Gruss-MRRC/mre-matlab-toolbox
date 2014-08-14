@@ -1,22 +1,27 @@
-function P = unwrapper(M,P)
-% Unwrap the phase of a multidimensional image. Matlab's `unwrap` function
-% operates columnwise and doesn't work well for data >1D. This works on 2D
-% to 5D images and, in particular, is designed to unwrap magnetic resonance
-% elastography (MRE) images stored in DICOM or NIFTI format.
+function P = fastUnwrap(M,P)
+% Unwrap the phase of a multidimensional image. 
 %
-% Inputs:
-% M:  magnitude image
-% P:  phase image (-pi,pi)
+% Matlab's `unwrap` function operates columnwise and doesn't work well
+% for data >1D. This works on 2D to 5D images and, in particular, is
+% designed to unwrap magnetic resonance elastography (MRE) images stored in
+% DICOM or NIFTI format.
 %
-% If either M or P are empty ([]), create using mri2mat. M and P can have
+% Inputs
+% ------
+% M: magnitude image
+% P: phase image (-pi,pi)
+%
+% If either M or P are empty ([]), create using `mri2mat`. M and P can have
 % up to 5 dimensions. If P is being unwrapped and has the dimensions
 % P(x,y,slice,phase,direction), the algorithm iterates over slice, phase,
 % and direction while unwrapping the xy plane.
 %
-% Outputs:
-% P:  Unwrapped phase image
+% Outputs
+% -------
+% P: Unwrapped phase image
 %
-% Algorithm: 
+% Algorithm
+% ---------
 % Nearest-neighbor unwrapping using a block of configurable size that
 % follows a spiral path. Inside the block, +/- 2pi is added to elements
 % that deviate by more than pi from the central value. The path generation
@@ -24,7 +29,7 @@ function P = unwrapper(M,P)
 % for other methods.
 %
 % See also mri2mat, MRE_Preview, unwrap
- 
+
   %--Config--%
   verbose=0; % Toggle debugging flags
   
