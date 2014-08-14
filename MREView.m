@@ -1,5 +1,5 @@
-function varargout = MRE_Preview(varargin)
-% MRE_Preview Preview and phase unwrap MRE sequences.
+function varargout = MREView(varargin)
+% MREView Preview and phase unwrap MRE sequences.
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES, UNWRAPPER, MRI2MAT
 % 
@@ -7,16 +7,16 @@ function varargout = MRE_Preview(varargin)
 % Alex Krolick <amk283@cornell.edu>
 % Mark Wagshul <mark.wagshul@einstein.yu.edu>
 
-% Edit the above text to modify the response to help MRE_Preview
+% Edit the above text to modify the response to help MREView
 
-% Last Modified by GUIDE v2.5 06-Aug-2014 20:06:05
+% Last Modified by GUIDE v2.5 14-Aug-2014 14:29:45
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @MRE_Preview_OpeningFcn, ...
-                   'gui_OutputFcn',  @MRE_Preview_OutputFcn, ...
+                   'gui_OpeningFcn', @MREView_OpeningFcn, ...
+                   'gui_OutputFcn',  @MREView_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -31,15 +31,15 @@ end
 % End initialization code - DO NOT EDIT
 
 
-% --- Executes just before MRE_Preview is made visible.
-function MRE_Preview_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before MREView is made visible.
+function MREView_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to MRE_Preview (see VARARGIN)
+% varargin   command line arguments to MREView (see VARARGIN)
 
-% Choose default command line output for MRE_Preview
+% Choose default command line output for MREView
 handles.output = hObject;
 
 % Set internal variables
@@ -58,13 +58,13 @@ guidata(hObject, handles);
 % Prompt for file
 statusMsg(handles,'Open an image file')
 
-% UIWAIT makes MRE_Preview wait for user response (see UIRESUME)
+% UIWAIT makes MREView wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 colormap gray;
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = MRE_Preview_OutputFcn(hObject, eventdata, handles) 
+function varargout = MREView_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
