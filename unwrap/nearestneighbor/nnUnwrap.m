@@ -1,4 +1,5 @@
 function [im1_p,centPos] = nnUnwrap(im1_m,im1_p,alpha,centPos,showFig,P_axes)
+% Nearest-Neighbor Unwrap
 
 %alpha = 1.5;
 im1_p = double(im1_p - 2048)*pi/2048;

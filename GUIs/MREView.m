@@ -1,16 +1,15 @@
 function varargout = MREView(varargin)
-% MREView Preview and phase unwrap MRE sequences.
+% Preview and phase unwrap MRE sequences.
 %
-% See also: GUIDE, GUIDATA, GUIHANDLES, UNWRAPPER, MRI2MAT
+% See also: GUIDE, GUIDATA, GUIHANDLES, FASTUNWRAP, MRI2MAT
 % 
-% Authors:
+% Authors
+% -------
 % Alex Krolick <amk283@cornell.edu>
 % Mark Wagshul <mark.wagshul@einstein.yu.edu>
 
-% Edit the above text to modify the response to help MREView
-
 % Last Modified by GUIDE v2.5 14-Aug-2014 14:29:45
-
+%
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -29,7 +28,6 @@ else
     gui_mainfcn(gui_State, varargin{:});
 end
 % End initialization code - DO NOT EDIT
-
 
 % --- Executes just before MREView is made visible.
 function MREView_OpeningFcn(hObject, eventdata, handles, varargin)

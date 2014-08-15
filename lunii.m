@@ -1,6 +1,5 @@
 function [nii_file, fileLocation] = lunii_multi(openText,fileLocation)
-
-%% Function to load nii file (untouch)
+% Function to load nii file (untouch)
 
 if isempty(fileLocation),
     [f p] = uigetfile('*.nii',openText);

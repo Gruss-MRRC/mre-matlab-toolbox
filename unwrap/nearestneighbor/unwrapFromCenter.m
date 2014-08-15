@@ -1,4 +1,5 @@
 function ph_out = unwrapFromCenter(ph1,unwrapDir,centPosition)
+% unwrap from center, correcting phase jumps
 
 ph_out = ph1;
 

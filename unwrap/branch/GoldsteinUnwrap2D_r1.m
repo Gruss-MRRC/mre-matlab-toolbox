@@ -1,4 +1,3 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % GoldsteinUnwrap2D is a script to demonstrate the 2D Goldstein branch cut phase unwrapping algorithm.
 %
 %  Calls: PhaseResidues
@@ -6,8 +5,8 @@
 %         FloodFill
 %
 % References::
-% 1. R. M. Goldstein, H. A. Zebken, and C. L. Werner, “Satellite radar interferometry:
-%    Two-dimensional phase unwrapping,” Radio Sci., vol. 23, no. 4, pp. 713–720, 1988.
+% 1. R. M. Goldstein, H. A. Zebken, and C. L. Werner, "Satellite radar interferometry:
+%    Two-dimensional phase unwrapping," Radio Sci., vol. 23, no. 4, pp. 713-720, 1988.
 % 2. D. C. Ghiglia and M. D. Pritt, Two-Dimensional Phase Unwrapping:
 %    Theory, Algorithms and Software. New York: Wiley-Interscience, 1998.
 %
@@ -36,15 +35,11 @@
 %             4. Allowed the user to specify IM, im_mask, max_box_radius before
 %                calling this routine.  (Note that threshold_std is not used.)
 %             5. Modified the plots to suit my preferences.
+% 2014/07/25  Modified by Alex Krolick:
+%             1. Change to function instead of script
+%             2. Instead of complex image, expect MAG and PHASE matrices
+%             3. Turn off interactivity and print statements
 %             
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%% Replace with your images
-% if(~exist('IM'))
-%   load 'IM.mat'                      %Load complex image
-% end
-% im_mag   = abs(IM);                  %Magnitude image
-% im_phase = angle(IM);                %Phase image
 
 function im_unwrapped = GoldsteinUnwrap2D_r1(im_mag,im_phase)
 IM = im_mag; % dummy variable just used for sizing matrice

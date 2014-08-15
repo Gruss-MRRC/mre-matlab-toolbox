@@ -1,5 +1,4 @@
 function [im_mag, im_phase] = getMREimages(sliceRange,showFig)
-
 % Extract magnitude and phase images from DICOM files.
 %
 % Inputs:

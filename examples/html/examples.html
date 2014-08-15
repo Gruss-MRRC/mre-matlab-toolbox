@@ -1,0 +1,245 @@
+
+<!DOCTYPE html
+  PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+   <!--
+This HTML was auto-generated from MATLAB code.
+To make changes, update the MATLAB code and republish this document.
+      --><title>MRE Examples</title><meta name="generator" content="MATLAB 7.14"><link rel="schema.DC" href="http://purl.org/dc/elements/1.1/"><meta name="DC.date" content="2014-08-15"><meta name="DC.source" content="examples.m"><style type="text/css">
+html,body,div,span,applet,object,iframe,h1,h2,h3,h4,h5,h6,p,blockquote,pre,a,abbr,acronym,address,big,cite,code,del,dfn,em,font,img,ins,kbd,q,s,samp,small,strike,strong,sub,sup,tt,var,b,u,i,center,dl,dt,dd,ol,ul,li,fieldset,form,label,legend,table,caption,tbody,tfoot,thead,tr,th,td{margin:0;padding:0;border:0;outline:0;font-size:100%;vertical-align:baseline;background:transparent}body{line-height:1}ol,ul{list-style:none}blockquote,q{quotes:none}blockquote:before,blockquote:after,q:before,q:after{content:'';content:none}:focus{outine:0}ins{text-decoration:none}del{text-decoration:line-through}table{border-collapse:collapse;border-spacing:0}
+
+html { min-height:100%; margin-bottom:1px; }
+html body { height:100%; margin:0px; font-family:Arial, Helvetica, sans-serif; font-size:10px; color:#000; line-height:140%; background:#fff none; overflow-y:scroll; }
+html body td { vertical-align:top; text-align:left; }
+
+h1 { padding:0px; margin:0px 0px 25px; font-family:Arial, Helvetica, sans-serif; font-size:1.5em; color:#d55000; line-height:100%; font-weight:normal; }
+h2 { padding:0px; margin:0px 0px 8px; font-family:Arial, Helvetica, sans-serif; font-size:1.2em; color:#000; font-weight:bold; line-height:140%; border-bottom:1px solid #d6d4d4; display:block; }
+h3 { padding:0px; margin:0px 0px 5px; font-family:Arial, Helvetica, sans-serif; font-size:1.1em; color:#000; font-weight:bold; line-height:140%; }
+
+a { color:#005fce; text-decoration:none; }
+a:hover { color:#005fce; text-decoration:underline; }
+a:visited { color:#004aa0; text-decoration:none; }
+
+p { padding:0px; margin:0px 0px 20px; }
+img { padding:0px; margin:0px 0px 20px; border:none; }
+p img, pre img, tt img, li img { margin-bottom:0px; } 
+
+ul { padding:0px; margin:0px 0px 20px 23px; list-style:square; }
+ul li { padding:0px; margin:0px 0px 7px 0px; }
+ul li ul { padding:5px 0px 0px; margin:0px 0px 7px 23px; }
+ul li ol li { list-style:decimal; }
+ol { padding:0px; margin:0px 0px 20px 0px; list-style:decimal; }
+ol li { padding:0px; margin:0px 0px 7px 23px; list-style-type:decimal; }
+ol li ol { padding:5px 0px 0px; margin:0px 0px 7px 0px; }
+ol li ol li { list-style-type:lower-alpha; }
+ol li ul { padding-top:7px; }
+ol li ul li { list-style:square; }
+
+.content { font-size:1.2em; line-height:140%; padding: 20px; }
+
+pre, tt, code { font-size:12px; }
+pre { margin:0px 0px 20px; }
+pre.error { color:red; }
+pre.codeinput { padding:10px; border:1px solid #d3d3d3; background:#f7f7f7; }
+pre.codeoutput { padding:10px 11px; margin:0px 0px 20px; color:#4c4c4c; }
+
+@media print { pre.codeinput, pre.codeoutput { word-wrap:break-word; width:100%; } }
+
+span.keyword { color:#0000FF }
+span.comment { color:#228B22 }
+span.string { color:#A020F0 }
+span.untermstring { color:#B20000 }
+span.syscmd { color:#B28C00 }
+
+.footer { width:auto; padding:10px 0px; margin:25px 0px 0px; border-top:1px dotted #878787; font-size:0.8em; line-height:140%; font-style:italic; color:#878787; text-align:left; float:none; }
+.footer p { margin:0px; }
+
+  </style></head><body><div class="content"><h1>MRE Examples</h1><!--introduction--><p>Using the MRE Matlab Toolbox</p><!--/introduction--><h2>Contents</h2><div><ul><li><a href="#1">Open an MRI image</a></li><li><a href="#4">Visualization in 2D</a></li><li><a href="#6">Visualization in 3D</a></li><li><a href="#7">Section plane through a 3D volume</a></li><li><a href="#8">MREView</a></li><li><a href="#9">Volume segmentation</a></li></ul></div><h2>Open an MRI image<a name="1"></a></h2><p>MRI2MAT opens common image formats such as DICOM and NIFTI</p><div><ul><li><a href="matlab:doc('mri2mat')">Help for mri2mat.m</a></li><li><a href="matlab:run('mri2mat')">Run mri2mat.m</a></li></ul></div><pre class="language-matlab">&gt;&gt; [M,info] = mri2mat();
+</pre><p><img vspace="5" hspace="5" src="filepicker.png" alt=""> </p><pre class="codeinput">[M,info] = mri2mat();
+</pre><p>The file you select in the file browser is opened as a matrix, which we can see has the same dimensions as those specified in the NIFTI header:</p><pre class="language-matlab">info.dime.dim(1)
+length(size(M))
+</pre><pre class="codeinput">disp(info.dime.dim(1))
+disp(length(size(M)))
+</pre><pre class="codeoutput">     4
+
+     4
+
+</pre><pre class="language-matlab">info.dime.dim(2:5)
+size(M)
+</pre><pre class="codeinput">disp(info.dime.dim(2:5))
+disp(size(M))
+</pre><pre class="codeoutput">   132   172   136     4
+
+   132   172   136     4
+
+</pre><h2>Visualization in 2D<a name="4"></a></h2><p>View a 2D slice of the image using the Image Toolbox function <i>imagesc</i></p><pre class="language-matlab">im = flipud(squeeze(M(65,:,:,1))');
+imagesc(im)
+colormap <span class="string">gray</span>, axis <span class="string">tight</span>
+</pre><pre class="codeinput">  im = flipud(squeeze(M(65,:,:,1))');
+  imagesc(im)
+  colormap <span class="string">gray</span>, axis <span class="string">tight</span>
+</pre><img vspace="5" hspace="5" src="examples_01.png" alt=""> <p>Note the use of <i>flipud</i> and <i>transpose (')</i> to orient the image and <i>squeeze</i> to reduce the image to 2D</p><h2>Visualization in 3D<a name="6"></a></h2><p>View a 3D volume</p><pre class="language-matlab">S = smooth3(M(:,:,:,1));
+isosurface(S,0)
+</pre><p><img vspace="5" hspace="5" src="isosurface.png" alt=""> </p><h2>Section plane through a 3D volume<a name="7"></a></h2><p>Create a section plane through a 3D volume, using information from the NIFTI header to scale the axes</p><pre class="language-matlab">colormap <span class="string">gray</span>
+D = M(round(1:info.dime.dim(2)/2),:,:,1); <span class="comment">% split along sagittal plane</span>
+Ds = smooth3(D);
+hiso = patch(isosurface(Ds,0),<span class="keyword">...</span>
+  <span class="string">'FaceColor'</span>,[.5,.5,.8],<span class="keyword">...</span>
+  <span class="string">'EdgeColor'</span>,<span class="string">'none'</span>);
+isonormals(Ds,hiso)
+hcap = patch(isocaps(D,0),<span class="keyword">...</span>
+  <span class="string">'FaceColor'</span>,<span class="string">'interp'</span>,<span class="keyword">...</span>
+  <span class="string">'EdgeColor'</span>,<span class="string">'none'</span>);
+view(35,30)
+axis <span class="string">tight</span>
+pixdim = info.dime.pixdim(2:4); <span class="comment">% get voxel dimensions</span>
+daspect(1./[pixdim(1),pixdim(2),pixdim(3)]) <span class="comment">% scale proportional to voxel shape</span>
+lightangle(90,0);
+set(gcf,<span class="string">'Renderer'</span>,<span class="string">'opengl'</span>); lighting <span class="string">phong</span>
+set(hcap,<span class="string">'AmbientStrength'</span>,1)
+set(hiso,<span class="string">'SpecularColorReflectance'</span>,0,<span class="string">'SpecularExponent'</span>,50)
+</pre><p><img vspace="5" hspace="5" src="brainsection.png" alt=""> </p><h2>MREView<a name="8"></a></h2><p>Use <i>MREView</i> to visualize volumes of up to 5 dimensions</p><div><ul><li><a href="matlab:doc('MREView')">Help for MREView.m</a></li><li><a href="matlab:run('MREView')">Run MREView.m</a></li></ul></div><pre class="language-matlab">&gt;&gt; MREView
+</pre><p><img vspace="5" hspace="5" src="mreview.png" alt=""> </p><p>The <i>unwrap</i> button launches a phase unwrapping function that attempts to correct large jumps in the aparent phase due to aliasing.</p><div><ul><li><a href="matlab:doc('fastUnwrap')">Help for fastUnwrap</a></li><li><a href="matlab:doc('QualityGuidedUnwrap2D_r1')">Help for QualityGuidedUnwrap</a></li></ul></div><p><img vspace="5" hspace="5" src="unwrapdialog.png" alt=""> </p><p><img vspace="5" hspace="5" src="mreviewunwrap.png" alt=""> </p><h2>Volume segmentation<a name="9"></a></h2><p><i>segmentVolumes</i> can be used to isolate volumes (e.g., the lateral ventricles) inside an MRI file. It has a number of GUI tools to facilitate image processing, and can create 3D views on demand.</p><div><ul><li><a href="matlab:doc('segmentVolumes')">Help for segmentVolumes.m</a></li><li><a href="matlab:run('segmentVolumes')">Run segmentVolumes.m</a></li></ul></div><p><b>Image Processing tools available in <i>segmentVolumes</i></b></p><div><ul><li><a href="matlab:doc('imerode')">imerode</a></li><li><a href="matlab:doc('imdilate')">imdilate</a></li><li><a href="matlab:doc('bwlabel')">bwlabel</a></li></ul></div><p>The current volume and file information can be saved to the spreadsheet specified in the textbox at the top of the window by clicking <i>Save</i> in the toolbar. This also saves changes to the file in Matlab's <tt>mat</tt> format inside the image's parent folder.</p><pre class="language-matlab">&gt;&gt; segmentVolumes
+</pre><p><img vspace="5" hspace="5" src="segmentvolumes.png" alt=""> </p><p>Using the isolate tool to select a region</p><p><img vspace="5" hspace="5" src="isolatetool.png" alt=""> </p><p>The image after running the isolate tool</p><p><img vspace="5" hspace="5" src="segmentvolumesisolate.png" alt=""> </p><p>3D rendering of isolated ventricles</p><p><img vspace="5" hspace="5" src="isolatedventricles3d.png" alt=""> </p><p class="footer"><br>
+      Published with MATLAB&reg; 7.14<br></p></div><!--
+##### SOURCE BEGIN #####
+%% MRE Examples
+% Using the MRE Matlab Toolbox
+%%
+
+%% Open an MRI image
+% MRI2MAT opens common image formats such as DICOM and NIFTI
+%
+% * <matlab:doc('mri2mat') Help for mri2mat.m>
+% * <matlab:run('mri2mat') Run mri2mat.m>
+%
+%   >> [M,info] = mri2mat();
+%
+% <<filepicker.png>>
+[M,info] = mri2mat();
+
+%%
+% The file you select in the file browser is opened as a matrix, which we
+% can see has the same dimensions as those specified in the NIFTI header:
+%
+%   info.dime.dim(1)
+%   length(size(M))
+disp(info.dime.dim(1))
+disp(length(size(M)))
+%%
+%   info.dime.dim(2:5)
+%   size(M)
+disp(info.dime.dim(2:5))
+disp(size(M))
+
+
+%% Visualization in 2D
+% View a 2D slice of the image using the Image Toolbox function _imagesc_
+%
+%   im = flipud(squeeze(M(65,:,:,1))');
+%   imagesc(im)
+%   colormap gray, axis tight
+
+  im = flipud(squeeze(M(65,:,:,1))');
+  imagesc(im)
+  colormap gray, axis tight
+  
+%%
+% Note the use of _flipud_ and _transpose (')_ to orient the
+% image and _squeeze_ to reduce the image to 2D
+
+
+%% Visualization in 3D
+% View a 3D volume
+%
+%   S = smooth3(M(:,:,:,1));
+%   isosurface(S,0)
+%
+% <<isosurface.png>>
+
+%% Section plane through a 3D volume
+% Create a section plane through a 3D volume, using information from the 
+% NIFTI header to scale the axes
+%
+%   colormap gray
+%   D = M(round(1:info.dime.dim(2)/2),:,:,1); % split along sagittal plane
+%   Ds = smooth3(D);
+%   hiso = patch(isosurface(Ds,0),...
+%     'FaceColor',[.5,.5,.8],...
+%     'EdgeColor','none');
+%   isonormals(Ds,hiso)
+%   hcap = patch(isocaps(D,0),...
+%     'FaceColor','interp',...
+%     'EdgeColor','none');
+%   view(35,30) 
+%   axis tight 
+%   pixdim = info.dime.pixdim(2:4); % get voxel dimensions
+%   daspect(1./[pixdim(1),pixdim(2),pixdim(3)]) % scale proportional to voxel shape
+%   lightangle(90,0);
+%   set(gcf,'Renderer','opengl'); lighting phong
+%   set(hcap,'AmbientStrength',1)
+%   set(hiso,'SpecularColorReflectance',0,'SpecularExponent',50)
+%
+% <<brainsection.png>>
+
+%% MREView
+% Use _MREView_ to visualize volumes of up to 5 dimensions
+%
+% * <matlab:doc('MREView') Help for MREView.m>
+% * <matlab:run('MREView') Run MREView.m>
+%
+%   >> MREView
+%
+% <<mreview.png>>
+%
+% The _unwrap_ button launches a phase unwrapping function that attempts to
+% correct large jumps in the aparent phase due to aliasing.
+%
+% * <matlab:doc('fastUnwrap') Help for fastUnwrap>
+% * <matlab:doc('QualityGuidedUnwrap2D_r1') Help for QualityGuidedUnwrap>
+% 
+% <<unwrapdialog.png>>
+%
+% <<mreviewunwrap.png>>
+
+
+%% Volume segmentation
+% _segmentVolumes_ can be used to isolate volumes (e.g., the lateral
+% ventricles) inside an MRI file. It has a number of GUI tools to
+% facilitate image processing, and can create 3D views on demand.
+% 
+% * <matlab:doc('segmentVolumes') Help for segmentVolumes.m>
+% * <matlab:run('segmentVolumes') Run segmentVolumes.m>
+% 
+% *Image Processing tools available in _segmentVolumes_*
+%
+% * <matlab:doc('imerode') imerode>
+% * <matlab:doc('imdilate') imdilate>
+% * <matlab:doc('bwlabel') bwlabel>
+%
+% The current volume and file information can be saved to the spreadsheet
+% specified in the textbox at the top of the window by clicking _Save_ in
+% the toolbar. This also saves changes to the file in Matlab's |mat| format
+% inside the image's parent folder. 
+%
+%   >> segmentVolumes
+%
+% <<segmentvolumes.png>>
+%
+% Using the isolate tool to select a region
+%
+% <<isolatetool.png>>
+%
+% The image after running the isolate tool
+%
+% <<segmentvolumesisolate.png>>
+%
+% 3D rendering of isolated ventricles
+%
+% <<isolatedventricles3d.png>>
+
+
+
+##### SOURCE END #####
+--></body></html>

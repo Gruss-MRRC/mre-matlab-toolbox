@@ -86,13 +86,13 @@ function varargout = segmentVolumes(varargin)
 % GUIDE:   GUI created using GUIDE toolbox
 % Matlab Image Processing Toolbox
 % 
-% Author:
+% Author
+% ------
 % Alex Krolick <amk283@cornell.edu>
 % 
+% -------
 % See also: MRI2MAT, IMERODE, IMDILATE, segmentVolumes.fig
-% 
-% Edit the above text to modify the response to help segmentVolumes
-% 
+
 % Last Modified by GUIDE v2.5 13-Aug-2014 10:34:05
 %
 % Begin initialization code - DO NOT EDIT

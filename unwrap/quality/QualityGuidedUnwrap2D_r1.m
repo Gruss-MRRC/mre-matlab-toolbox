@@ -1,6 +1,4 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% QualityGuidedUnwrap2D implements 2D quality guided path following phase
-% unwrapping algorithm.
+% Implements 2D quality guided path following phase unwrapping algorithm.
 %
 % Inputs: 1. Complex image in .mat double format
 %         2. Binary mask (optional)          
@@ -14,15 +12,11 @@
 %
 % Posted by Bruce Spottiswoode on 22 December 2008
 % 2010/07/23  Modified by Carey Smith
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 2014/07/25  Modified by Alex Krolick:
+%             1. Change to function instead of script
+%             2. Instead of complex image, expect MAG and PHASE matrices
+%             3. Turn off interactivity and print statements
 
-%% Replace with your images
-
-% if(~exist('IM'))
-%   load 'IM.mat'                               %Load complex image
-% end
-% im_mag   = abs(IM);                  %Magnitude image
-% im_phase = angle(IM);                %Phase image
 
 function im_unwrapped = QualityGuidedUnwrap2D_r1(im_mag,im_phase)
 IM = ones(size(im_mag)); % Not really the complex image; just used for size()

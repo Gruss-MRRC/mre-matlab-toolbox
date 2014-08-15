@@ -1,3 +1,4 @@
+Copyright (c) 2014, Alex Krolick
 Copyright (c) 2010, Carey Smith
 Copyright (c) 2008, Bruce Spottiswoode
 All rights reserved.

@@ -1,3 +1,4 @@
+% Simulate an MRE acquisition sequence
 
 AT = 5; % min, total acq time
 w1 = 55;  % vibration frequency, in Hz

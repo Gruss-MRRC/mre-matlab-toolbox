@@ -1,5 +1,5 @@
-% bandpassfilter.m - Creates bandpass Butterworth filter in two dimensions.
-
+% Creates bandpass Butterworth filter in two dimensions.
+%
 % BANDPASSFILTER - Constructs a band-pass butterworth filter
 %
 % usage: f = bandpassfilter(sze, cutin, cutoff, n)

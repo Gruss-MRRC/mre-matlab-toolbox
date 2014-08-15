@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<demos>
+    <name>MRE Toolbox</name>
+    <type>toolbox</type>
+    <icon>HelpIcon.DEMOS</icon>
+    <description>Work with MRE images</description>
+    <website><a href="http://mrrcwiki.einstein.yu.edu/">MRRC Wiki</a></website>
+
+    <demosection>
+        <label>Examples</label>
+        <demoitem>
+            <label>MRE Examples</label>
+            <type>M-file</type>
+            <source>../examples</source>
+        </demoitem>
+    </demosection>
+</demos>

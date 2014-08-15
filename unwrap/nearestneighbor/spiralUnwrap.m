@@ -1,4 +1,5 @@
 function im1_p = spiralUnwrap(im1_m,im1_p,alpha)
+% Unwrap a phase image along a spiral path
 
 %alpha = 1.5;
 % im1_m = im1(:,:,1:8);
