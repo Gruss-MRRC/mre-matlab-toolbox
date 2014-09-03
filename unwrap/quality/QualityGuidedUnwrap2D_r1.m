@@ -40,7 +40,7 @@ adjoin = zeros(size(IM));            %Zero starting matrix for adjoin matrix
 unwrapped_binary = zeros(size(IM));  %Binary image to mark unwrapped pixels
 
 %% Calculate phase quality map
-im_phase_quality = PhaseDerivativeVariance_r1(im_phase);
+im_phase_quality = PhaseDerivativeVariance_r1(im_phase.*im_mask);
 
 %% Automatically (default) or manually identify starting seed point on a phase quality map 
 minp = im_phase_quality(2:end-1, 2:end-1); minp = min(minp(:));

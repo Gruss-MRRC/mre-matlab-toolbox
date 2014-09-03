@@ -1,7 +1,13 @@
 function varargout = MREView(varargin)
 % Preview and phase unwrap MRE sequences.
+% 
+% Use the 'Save' button to store the processed image as multidimensional
+% matrices in Matlab's .mat format. You can load this file later in MREView
+% from the file picker dialog, or pull the variables into the Matlab
+% workspace using the 'load' command (useful for creating your own movies
+% or image sequences).
 %
-% See also: GUIDE, GUIDATA, GUIHANDLES, FASTUNWRAP, MRI2MAT
+% See also: GUIDE, GUIDATA, GUIHANDLES, FASTUNWRAP, MRI2MAT, MRESLICE2AVI
 % 
 % Authors
 % -------
@@ -438,7 +444,7 @@ if length(dims) == 5,
       for dir = 1:dims(5);
          for slice = 1:nSlices,
               for phase = 1:nPhases,
-                  im1a_ph(:,:,slice,phase) = QualityGuidedUnwrap2D_r1(...
+                  im1a_ph(:,:,slice,phase,dir) = QualityGuidedUnwrap2D_r1(...
                                     squeeze(im_mag(:,:,slice,phase,dir)),...
                                     squeeze(im_phase(:,:,slice,phase,dir)));
                  stat = sprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g',slice,nSlices,phase,nPhases,dir); 

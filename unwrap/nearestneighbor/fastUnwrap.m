@@ -28,6 +28,10 @@ function P = fastUnwrap(M,P)
 % and unwrapping algorithm are subfunctions that can easily be substituted
 % for other methods.
 %
+% Author
+% ------
+% Alex Krolick <amk283@cornell.edu>
+%
 % See also mri2mat, MRE_Preview, unwrap
 
   %--Config--%
@@ -36,7 +40,7 @@ function P = fastUnwrap(M,P)
   % If M or P are empty, open a new file using mri2mat
   if (isempty(P) || isempty(M)), [M,P] = mri2mat(); end
   
-  P = mask(P,M,'minimum',180,NaN);
+  P = mask(P,M,'factor',.1,NaN);
   [nX,nY,nSlices,nPhases,nDirs] = size(P);
   
   %--Variables to control path--%
