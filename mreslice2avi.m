@@ -30,7 +30,7 @@ function mreslice2avi(phase_image,movie_filename_prefix,slice)
 % Configuration
 p = phase_image; % your phase image here
 moviefilename = [movie_filename_prefix num2str(slice) '.avi'];
-nphases = size(P,4); % number of phases (timesteps)
+nphases = size(phase_image,4); % number of phases (timesteps)
 
 h = figure;
 colormap gray
@@ -51,5 +51,6 @@ for i = 1:nphases
   axis off
   title('Z')
   F(i) = getframe(h);
+  snapnow
 end
 movie2avi(F, moviefilename);

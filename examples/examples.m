@@ -133,4 +133,13 @@ disp(size(M))
 %
 % <<isolatedventricles3d.png>>
 
-
+%% Make a movie of a slice
+% * <matlab:doc('mreslice2avi') Help for mreslice2avi.m>
+%
+% *Usage:*
+%
+%   mreslice2avi(phase_image,movie_filename_prefix,slice)
+%   >> data = load('Datasets/imgXYZ.mat')
+%   >> mreslice2avi(data.P,'imgXYZ_slice',15)
+data = load('~/Datasets/MRE/104A_MRE_4D.mat')
+mreslice2avi(data.P,'demo_slice',15);
