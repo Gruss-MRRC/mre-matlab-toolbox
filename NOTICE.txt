@@ -1,0 +1,3 @@
+MRE Matlab Toolbox
+------------------
+Copyright 2014 Albert Einstein College of Medicine

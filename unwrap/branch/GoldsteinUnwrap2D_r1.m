@@ -42,12 +42,12 @@
 %             
 
 function im_unwrapped = GoldsteinUnwrap2D_r1(im_mag,im_phase)
-IM = im_mag; % dummy variable just used for sizing matrice
+IM = im_mag; % dummy variable just used for sizing matrices
 
 %% Replace with your mask (if desired)
 im_mask = ones(size(IM));
 mag_max = max(im_mag(:));
-indx1 = im_mag < 0.1*mag_max;  %Intensity = mag^2, so this = .04 threshold on the intensity
+indx1 = im_mag < 0.1*mag_max;  %Intensity = mag^2, so this = .01 threshold on the intensity
 im_mask(indx1) = 0;   % Don't mask at this point; wait until residues are computed
 if(~exist('im_mask','var'))
   im_mask = ones(size(IM));          %Mask (if applicable)
