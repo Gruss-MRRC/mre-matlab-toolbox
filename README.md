@@ -12,12 +12,10 @@ A Matlab toolbox for working with magnetic resonance elastography (MRE) images, 
 ## Screenshots
 
 ![volume segmentation gui](examples/html/segmentvolumes.png)
-Link: [volume segmentation gui](examples/html/segmentvolumes.png)
 
 _**Figure:** Volume Segmentation_
 
 ![mreview gui](examples/html/mreview.png)
-Link: [volume segmentation gui](examples/html/mreview.png)
 
 _**Figure:** MREView_
 
@@ -41,7 +39,7 @@ In either case, remember to add the folder and subfolder to your Matlab path usi
 
 ## Help
 
-Almost all of the Matlab files are covered by documentation in the source files. This can be accessed using Matlab's internal help browser by calling `doc _functionname_`. Contact the author of the file if you have further questions.
+Almost all of the Matlab files are covered by documentation in the source files. This can be accessed using Matlab's internal help browser by calling `doc functionname`. Contact the author of the file if you have further questions.
 
 ## Bugs
 
@@ -49,10 +47,10 @@ If you find a bug in one of the programs, please report it using GitHub Issues o
 
 ## Dependencies
 
-[NIFTI Toolbox for Matlab][niftitoolbox]: Free software (BSD License)
-[Image Processing Toolbox for Matlab][imageprocessing]: License required from the Mathworks
-[2D Phase Unwrapping Functions][phaseunwrap]: Free software (BSD License)
-[DCMDUMP][dcmdump]: Free software (BSD License)
+- [NIFTI Toolbox for Matlab][niftitoolbox]: Free software (BSD License)
+- [Image Processing Toolbox for Matlab][imageprocessing]: License required from the Mathworks
+- [2D Phase Unwrapping Functions][phaseunwrap]: Free software (BSD License)
+- [DCMDUMP][dcmdump]: Free software (BSD License)
 
 [niftitoolbox]:http://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image/content/NIfTI_20140122.zip
 [imageprocessing]:http://www.mathworks.com/products/image/
@@ -81,5 +79,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-[Copyright Notice](NOTICE.txt)
-[Apache License 2.0](LICENSE.txt)
+- [Copyright Notice](NOTICE.txt)
+- [Apache License 2.0](LICENSE.txt)
