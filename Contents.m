@@ -2,7 +2,7 @@
 %
 % Files
 %   bandpassfilter          - Bandpass Butterworth filter in two dimensions
-%   examples                - MRE Examples
+%   examples                - MRE Toolbox examples
 %   fixPhase                - 
 %   getFFT                  - 
 %   getMRE_EPI              - 
@@ -14,3 +14,8 @@
 %   MRE_sequence_simulation - Simulate an MRE acquisition sequence
 %   mri2mat                 - Convert NIFTI and DICOM images to matrix format
 %   probePhaseData          - 
+%   GUIs                    - GUI Toolboxes
+%   GUIS/segmentVolumes     - Interface to isolate subvolumes of brain images
+%   GUIs/MREView            - Preview MRE sequences
+%   unwrap                  - Implementations of phase unwrapping algorithms
+%   mreslice2avi            - Save MRE motion sequence to avi movie
