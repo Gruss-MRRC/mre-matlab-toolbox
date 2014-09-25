@@ -93,10 +93,10 @@ function varargout = segmentVolumes(varargin)
 % -------
 % See also: MRI2MAT, IMERODE, IMDILATE, segmentVolumes.fig
 
-% Last Modified by GUIDE v2.5 13-Aug-2014 10:34:05
+% Last Modified by GUIDE v2.5 23-Sep-2014 15:56:58
 %
 % Begin initialization code - DO NOT EDIT
-gui_Singleton = 1;
+gui_Singleton = 0;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
                    'gui_OpeningFcn', @segmentVolumes_OpeningFcn, ...
@@ -129,6 +129,7 @@ handles.output = hObject;
 % SETUP
 handles.M = [];
 pt = [1,1,1,1];
+handles.M0 = [];
 handles.pt = pt;
 handles.volume = 1;
 handles.cut = {[],[],[],[]};
@@ -189,6 +190,7 @@ set(handles.volumeSelect,'SliderStep',[1 1]/dims(4));
 pt = ceil(dims/2); 
 set(handles.volumeSelect,'Value',pt(4));
 handles.M = M;
+handles.M0 = M;
 handles.pt = pt;
 handles.header = header;
 statusMsg(handles,sprintf('%s %s',...
@@ -498,6 +500,7 @@ nhood = handles.nhood;
 v = handles.pt(4);
 M = M(:,:,:,v);
 M = imdilate(M,nhood);
+M = M.*(handles.M0(:,:,:,v)>0);
 statusMsg(handles,'Dilation complete')
 handles.M(:,:,:,v) = M;
 guidata(hObject,handles)
@@ -576,3 +579,20 @@ function csvFileBox_Callback(hObject, eventdata, handles)
 
 function csvFileBox_CreateFcn(hObject, eventdata, handles)
 set(hObject,'String',[pwd '/Volumes.csv']);
+
+
+function morphopenBtn_Callback(hObject, eventdata, handles)
+M = handles.M;
+nhood = strel('ball',3,1);
+M = imopen(M,nhood);
+statusMsg(handles,'Morphological opening complete')
+handles.M = M.*(M>.5);
+guidata(hObject,handles)
+update_Axes(hObject,handles)
+
+
+function resetBtn_Callback(hObject, eventdata, handles)
+handles.M = handles.M0;
+statusMsg(handles,'Image reset')
+guidata(hObject,handles)
+update_Axes(hObject,handles)
