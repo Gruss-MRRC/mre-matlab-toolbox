@@ -11,11 +11,11 @@ A Matlab toolbox for working with magnetic resonance elastography (MRE) images, 
 
 ## Screenshots
 
-![volume segmentation gui](examples/html/segmentvolumes.png)
+![volume segmentation gui](Examples/html/segmentvolumes.png)
 
 _**Figure:** Volume Segmentation_
 
-![mreview gui](examples/html/mreview.png)
+![mreview gui](Examples/html/mreview.png)
 
 _**Figure:** MREView_
 
