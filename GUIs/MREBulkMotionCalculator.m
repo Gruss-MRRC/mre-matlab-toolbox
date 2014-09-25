@@ -1,8 +1,18 @@
-function varargout = MREView(varargin)
-% Preview and phase unwrap MRE sequences.
-% 
+function varargout = MREBulkMotionCalculator(varargin)
+% Calculate bulk motion amplitude of a cerebral MRE test sequence
+% GUI to unwrap MRE test sequence and determine of bulk motion amplitude is
+% sufficient to carry out the full sequence. 'MRE Viewer' is a version of
+% this program with more functionality.
+%
+% Inputs:
+% 4D DICOM file with .dicom extension (loaded using the 'Open File' button in the
+% toolbar)
+%
+% Outputs:
+% The scaled motion amplitude is printed to the GUI window
+%
 % Use the 'Save' button to store the processed image as multidimensional
-% matrices in Matlab's .mat format. You can load this file later in MREView
+% matrices in Matlab's .mat format. You can load this file later in Matlab
 % from the file picker dialog, or pull the variables into the Matlab
 % workspace using the 'load' command (useful for creating your own movies
 % or image sequences).
@@ -14,14 +24,14 @@ function varargout = MREView(varargin)
 % Alex Krolick <amk283@cornell.edu>
 % Mark Wagshul <mark.wagshul@einstein.yu.edu>
 
-% Last Modified by GUIDE v2.5 24-Sep-2014 18:15:55
+% Last Modified by GUIDE v2.5 25-Sep-2014 12:35:17
 %
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
                    'gui_Singleton',  gui_Singleton, ...
-                   'gui_OpeningFcn', @MREView_OpeningFcn, ...
-                   'gui_OutputFcn',  @MREView_OutputFcn, ...
+                   'gui_OpeningFcn', @MREBulkMotionCalculator_OpeningFcn, ...
+                   'gui_OutputFcn',  @MREBulkMotionCalculator_OutputFcn, ...
                    'gui_LayoutFcn',  [] , ...
                    'gui_Callback',   []);
 if nargin && ischar(varargin{1})
@@ -35,21 +45,20 @@ else
 end
 % End initialization code - DO NOT EDIT
 
-% --- Executes just before MREView is made visible.
-function MREView_OpeningFcn(hObject, eventdata, handles, varargin)
+% --- Executes just before MREBulkMotionCalculator is made visible.
+function MREBulkMotionCalculator_OpeningFcn(hObject, eventdata, handles, varargin)
 % This function has no output args, see OutputFcn.
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-% varargin   command line arguments to MREView (see VARARGIN)
+% varargin   command line arguments to MREBulkMotionCalculator (see VARARGIN)
 
-% Choose default command line output for MREView
+% Choose default command line output for MREBulkMotionCalculator
 handles.output = hObject;
 
 % Set internal variables
 handles.phase = 1; % The active phase in the GUI
 handles.slice = 1; % The active slice in the GUI
-handles.direction = 1; % The active plane in the 5th dimension
 handles.image = cell(1);  % An array of images in case several are open
 handles.curImg = 1;  % Index of the current image
 handles.images{handles.curImg} = struct('phase',[],'mag',[]);
@@ -63,13 +72,13 @@ guidata(hObject, handles);
 % Prompt for file
 statusMsg(handles,'Open an image file')
 
-% UIWAIT makes MREView wait for user response (see UIRESUME)
+% UIWAIT makes MREBulkMotionCalculator wait for user response (see UIRESUME)
 % uiwait(handles.figure1);
 colormap gray;
 
 
 % --- Outputs from this function are returned to the command line.
-function varargout = MREView_OutputFcn(hObject, eventdata, handles) 
+function varargout = MREBulkMotionCalculator_OutputFcn(hObject, eventdata, handles) 
 % varargout  cell array for returning output args (see VARARGOUT);
 % hObject    handle to figure
 % eventdata  reserved - to be defined in a future version of MATLAB
@@ -266,26 +275,18 @@ openFile(hObject,handles)
 function openFile(hObject,handles)
 % Open a MRE image file and pass it to the appropriate handler function
 
-[mag,phase,info] = mri2mat();
+statusMsg(handles,'Opening...');
+[f p] = uigetfile('*.dicom')
+[mag,phase,info] = loadimage(p,f);
 handles.header = info;
 i = handles.curImg;
 nSlices = size(mag,3);
 nPhases = size(mag,4);
 statusMsg(handles,'Opening image...');
-switch length(size(mag))
-  case 4 % MRE image
-    handles.images{i}.mag = mag;
-    handles.images{i}.phase = phase;
-    handles.activeImg = phase;
-    set(handles.dirBtnGrp,'Visible','off');  
-    set(handles.magToggle,'Visible','on');
-  case 5 % Motion-sensitized MRE image
-    handles.images{i}.mag = mag;
-    handles.images{i}.phase = phase;
-    handles.activeImg = phase;
-    set(handles.dirBtnGrp,'Visible','on');
-    set(handles.magToggle,'Visible','on');
-end
+handles.images{i}.mag = mag;
+handles.images{i}.phase = phase;
+handles.activeImg = phase;
+set(handles.magToggle,'Visible','on');
 statusMsg(handles,'Setting up workspace...');
 p = handles.phaseSelect;
 s = handles.sliceSelect;
@@ -300,6 +301,61 @@ set(handles.magToggle,'SelectedObject',handles.phaseBtn);
 updateCAxis(handles);
 redraw(handles);
 statusMsg(handles,'Image loaded')
+
+
+ function [mag,phase,info] = loadimage(p,f)
+% Take a 4D DICOM file and output 5D matrices for phase and magnitude by
+% shuffling the 4th dimension. Assume that the input format is [x,y,t],
+% where the time axis is filled according to the sequence
+% [(mag,slice1,dir1,t1),(mag,slice1,dir1,t2)...(phase,sliceN,dirN,tN)].
+% Decompose into a matrix for phase and a matrix for magnitude, which
+% should each be of the form [x,y,z,phase,direction], where phase is a
+% temporal dimension. The difference between READNIFTI5D and READDICOM5D is
+% that the DICOM header contains information about the number of
+% dimensions, but the NIFTI header does not. The number of directions is
+% assumed to be 4 in READNIFTI5D. Image orientations may also be different
+% if using DICOM.
+%
+% See also getMRESinkus.m, readNIFTI5D, readDICOM5D_Mask
+  
+  % Open file
+  im = dicomread([p f]);
+  im = double(squeeze(im)); % squeeze gets rid of singleton dimensions
+  
+  % Metadata
+  if exist('/gmrrc/mrbin/dcmdump','file') && isunix()
+    [~,result] = system(['dcmdump ' p f...
+      ' | grep NumberOfTemporalPositions'...
+      '| awk ''{print $3}'' | head -n 1 | sed ''s/\[//g'' | sed ''s/]//g''']);
+    nDirs = str2num(result);
+    [~,result] = system(['dcmdump ' p f ...
+      ' | grep "(2001,1018)" | awk ''{print $3}''']);
+    nSlices = str2num(result);
+    info = struct();
+  else
+    info = dicominfo([p f]);
+    nDirs   = info.Private_2001_1081;
+    nSlices = info.Private_2001_1018;
+  end
+  nX = size(im,1); 
+  nY = size(im,2);
+  nVolumes = size(im,3);
+  nPhases = nVolumes / 2 / nDirs / nSlices;
+  
+  % Fill 5D matrices with volumes from 3D matrix
+  k1=1;
+  mag = zeros(nX,nY,nSlices,nPhases,nDirs);
+  phase = mag;
+  for slice = 1:nSlices,
+    for dir = 1:nDirs,
+      for ph = 1:nPhases,
+        mag(:,:,slice,ph,dir) = im(:,:,k1);
+        phase(:,:,slice,ph,dir) = im(:,:,nVolumes/2+k1);
+        k1 = k1 + 1;
+       end
+    end
+  end
+  phase = double(phase)*pi/2048-pi;
 
 
 % --------------------------------------------------------------------
@@ -385,6 +441,9 @@ set(handles.cAxis,'Value',0.5*m);
 
 % --- Executes on button press in helpBtn.
 function helpBtn_Callback(hObject, eventdata, handles)
+% hObject    handle to helpBtn (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
 msgbox(['Contact Mark Wagshul <mark.wagshul@einstein.yu.edu> ',...
   'or Alex Krolick <amk283@cornell.edu>'],'Help')
 
@@ -400,16 +459,14 @@ function dirBtnGrp_SelectionChangeFcn(hObject, eventdata, handles)
 i = handles.curImg;
 switch hObject
     case handles.xBtn
-      d = 1;
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,1);
     case handles.yBtn
-      d = 2;  
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,2);
     case handles.zBtn
-      d = 3;
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,3);
     case handles.bBtn
-      d = 4;  
+        handles.activeImg = handles.images{i}.phase(:,:,:,:,4);
 end
-handles.direction = d;
-handles.activeImg = handles.images{i}.phase(:,:,:,:,d);
 guidata(hObject,handles)
 updateCAxis(handles)
 redraw(handles)
@@ -422,105 +479,13 @@ function unwrapBtn_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 statusMsg(handles,'Phase unwrapping...')
 i = handles.curImg;
-dims = size(handles.images{i}.phase);
-nSlices= dims(3); nPhases= dims(4);
 im_mag = handles.images{i}.mag;
 im_phase = handles.images{i}.phase;
-im_unwrap = im_phase;
 
-method = questdlg('Use Fast (nearest-neighbor) or Slow (quality-guided) process to unwrap:', ...
- 'Unwrap Algorithm', ...
- 'Fast','Slow','Fast');
-
-%-------------------------5D-------------------------%
-if length(dims) == 5,
-  switch method
-    case 'Slow'
-      w=waitbar(0,'Progress');
-      tic
-      im1a_ph = im_phase;
-      for dir = 1:dims(5);
-         for slice = 1:nSlices,
-              for phase = 1:nPhases,
-                  im1a_ph(:,:,slice,phase,dir) = QualityGuidedUnwrap2D_r1(...
-                                    squeeze(im_mag(:,:,slice,phase,dir)),...
-                                    squeeze(im_phase(:,:,slice,phase,dir)));
-                 stat = sprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g',slice,nSlices,phase,nPhases,dir); 
-                 waitbar((dir-1+(slice-1+phase/nPhases)/nSlices)/dims(5),w,stat)
-              end
-          end
-      end
-      delete(w)
-      runtime=toc;
-    case 'Fast'
-      tic
-      im1a_ph = fastUnwrap(im_mag,im_phase);
-      runtime=toc;
-  end
-     % Subtract phase due to background field 
-    im_ph_P = im1a_ph(:,:,:,:,1)-im1a_ph(:,:,:,:,4); % Phase direction
-    im_ph_M = im1a_ph(:,:,:,:,2)-im1a_ph(:,:,:,:,4); % Magnitude direction
-    im_ph_S = im1a_ph(:,:,:,:,3)-im1a_ph(:,:,:,:,4); % Slice direction
-
-    % Time (phase) average
-    mn_P = mean(im_ph_P,4);
-    mn_M = mean(im_ph_M,4);
-    mn_S = mean(im_ph_S,4);
-
-    % Direction average (bulk motion)
-    %size(im_ph_P(4))
-    for h = 1:8,
-        mnb_P(h) = mean(nonzeros(im_ph_P(:,:,4,h)));
-        im_ph_P(:,:,:,h) = im_ph_P(:,:,:,h) - mnb_P(h);
-        mnb_M(h) = mean(nonzeros(im_ph_M(:,:,4,h)));
-        im_ph_M(:,:,:,h) = im_ph_M(:,:,:,h) - mnb_M(h);
-        mnb_S(h) = mean(nonzeros(im_ph_S(:,:,4,h)));
-        im_ph_S(:,:,:,h) = im_ph_S(:,:,:,h) - mnb_S(h);
-    end
-
-    % subtract off direction-averaged mean phase
-    for ph = 1:nPhases,
-        im_phase(:,:,:,ph,1) = im_ph_P(:,:,:,ph)-mn_P;
-        im_phase(:,:,:,ph,2) = im_ph_M(:,:,:,ph)-mn_M;
-        im_phase(:,:,:,ph,3) = im_ph_S(:,:,:,ph)-mn_S;
-    end
-    for ph = 1:nPhases,
-        for sl = 1:nSlices, 
-            im_mag(:,:,sl,ph) = mean(im_mag(:,:,sl,ph,:),5);
-        end
-    end
+tic
+im_unwrap = fastUnwrap(im_mag,im_phase);
+runtime=toc;
     
-    im_unwrap = im1a_ph;
-%------------------------------------4D-----------------------------------%
-else
-  switch method
-    case 'Slow'
-      w=waitbar(0,'Progress');
-      tic
-      for slice = 1:nSlices,
-          for phase = 1:nPhases,
-              im_unwrap(:,:,slice,phase) = QualityGuidedUnwrap2D_r1(...
-                                squeeze(im_mag(:,:,slice,phase)),...
-                                squeeze(im_phase(:,:,slice,phase)));
-  %             im_unwrap(:,:,slice,phase) = GoldsteinUnwrap2D_r1(...
-  %                               squeeze(im_mag(:,:,slice,phase)),...
-  %                               squeeze(im_phase(:,:,slice,phase)));
-              stat=sprintf('Slice: %g/%g, Phase: %g/%g',slice,nSlices,phase,nPhases);
-              waitbar((slice-1+(phase/nPhases))/nSlices,w,stat)
-          end
-      end
-      delete(w)
-      runtime=toc;
-    case 'Fast'
-      tic
-      im_unwrap = fastUnwrap(im_mag,im_phase);
-      runtime=toc;
-  end
-    mean_phase = mean(im_unwrap,4);
-    for k = 1:nPhases,
-        im_unwrap(:,:,:,k) = im_unwrap(:,:,:,k) - mean_phase(:,:,:);
-    end
-end
 statusMsg(handles,sprintf('Unwrap took %.2f s',runtime))
 handles.images{i}.phase = squeeze(im_unwrap);
 handles.images{i}.mag = squeeze(im_mag);
@@ -537,7 +502,8 @@ matfile   = [header.path strtok(header.filename,'.') '.mat'];
 M = handles.images{handles.curImg}.mag;
 P = handles.images{handles.curImg}.phase;
 save(matfile, 'header', 'M', 'P');
-
+statusMsg(handles,sprintf('Saved %s',matfile))
+guidata(hObject,handles);
 
 function bulkmotionBtn_Callback(hObject, eventdata, handles)
 % Call bulk motion calculation function & report result
@@ -550,12 +516,13 @@ scale = str2num(get(handles.conversionScaleBox,'String'));
 P = handles.images{handles.curImg}.phase;
 
 % Call calculation function
-direction = handles.direction;
-showplots = true;
-amplitude = bulkmotion(P,scale,direction,showplots);
+amplitude = bulkmotion(P,scale,1,false);
+cutoffamplitude = 40; % microns
 
 % Report back to user
-message = sprintf('Bulk motion amplitude: %.2g microns',amplitude);
+message = sprintf(['Bulk motion amplitude: %.2g microns\n'...
+                   'Minumum needed for MRE: %.2g microns'],...
+                   amplitude,cutoffamplitude);
 statusMsg(handles,message)
 guidata(hObject,handles);
 
@@ -570,9 +537,3 @@ function conversionScaleBox_CreateFcn(hObject, eventdata, handles)
 if ispc && isequal(get(hObject,'BackgroundColor'), get(0,'defaultUicontrolBackgroundColor'))
     set(hObject,'BackgroundColor','white');
 end
-
-
-function helpBtn_ClickedCallback(hObject, eventdata, handles)
-msgbox(['Contact Mark Wagshul <mark.wagshul@einstein.yu.edu> ',...
-  'or Alex Krolick <amk283@cornell.edu>'],'Help')
-help('MREView')
