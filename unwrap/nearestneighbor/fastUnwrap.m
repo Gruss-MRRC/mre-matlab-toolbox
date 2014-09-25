@@ -47,7 +47,7 @@ function P = fastUnwrap(M,P)
   blockSize = 3;
   step      = floor(blockSize/2);
   center    = [round(nX/2),round(nY/2)];
-  [X,Y]     = pathGen(center,1,nX-blockSize);
+  [X,Y]     = pathGen(center,blockSize/blockSize,nX-blockSize);
   
   %--Unwrap along path--%
   for dir = 1:nDirs, for slice = 1:nSlices, for phase = 1:nPhases,
@@ -88,7 +88,7 @@ function A = mask(A,B,mode,threshold,value)
     case 'rangeInclude'
       A(B<threshold(1) | B>threshold(2)) = value;
     case 'stdDev'
-      A(B<(mean(B)-threshold*std(B))) = value;
+      A(B<(mean(nonzeros(B))-threshold*std(nonzeros(B)))) = value;
     case 'binary'
         A(~B) = value;
   end
@@ -134,16 +134,21 @@ function block = unwrapBlock(block,center)
     if ~isnan(block(i))
       tries=1;
       diff = center-block(i);
-      while diff>pi && tries<4
+      while abs(diff)>pi && tries<2
       diff2 = center-block(i)-sign(diff)*2*pi;
-      if abs(diff)>abs(diff2)
-        block(i) = block(i)+2*pi;
+      if abs(diff2)<abs(diff)
+        block(i) = block(i)+sign(diff)*2*pi;
       end
       diff = center-block(i);
       tries=tries+1;
       end
     end
   end
+  
+function block = moduloBlock(block,center)
+% Perform phase unwrapping step on the provided subset (`block`) of the
+% whole image
+block = mod(block,2*pi);
   
   
 function debug(Ps)
@@ -153,5 +158,5 @@ function debug(Ps)
   P_ = sqrt(Px.^2+Py.^2);
   errors = numel(nonzeros(abs(P_)>pi));
   disp(errors)
-  show(Ps)
+  %show(Ps)
 
