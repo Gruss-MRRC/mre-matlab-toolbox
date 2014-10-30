@@ -35,23 +35,32 @@ function P = fastUnwrap(M,P)
 % See also mri2mat, MRE_Preview, unwrap
 
   %--Config--%
-  verbose=0; % Toggle debugging flags
+  verbose=false; % Toggle debugging flags
   
   % If M or P are empty, open a new file using mri2mat
   if (isempty(P) || isempty(M)), [M,P] = mri2mat(); end
   
-  P = mask(P,M,'factor',.1,NaN);
   [nX,nY,nSlices,nPhases,nDirs] = size(P);
-  
   %--Variables to control path--%
   blockSize = 3;
   step      = floor(blockSize/2);
   center    = [round(nX/2),round(nY/2)];
-  [X,Y]     = pathGen(center,blockSize/blockSize,nX-blockSize);
+  [X,Y]     = pathGen(center,1,nX-blockSize);
+  
+  %--Mask parameters--%
+  % Cut off everything below 12.5% of peak magnitude
+  method='minimum';
+  threshold=.125*(max(M(:))-min(M(:)));
+  maskvalue=NaN;
   
   %--Unwrap along path--%
   for dir = 1:nDirs, for slice = 1:nSlices, for phase = 1:nPhases,
-    Ps = P(:,:,slice,phase,dir);
+    Ps = mask(... % mask current slice with magnitude filter
+        P(:,:,slice,phase,dir),...
+        M(:,:,slice,phase,dir),...
+        method,threshold,...
+        maskvalue);
+    Ps(Ps==-pi)=NaN;
     x=X(1); y=Y(1);
     i=1;
     while i<length(X)
@@ -67,32 +76,40 @@ function P = fastUnwrap(M,P)
   
 function A = mask(A,B,mode,threshold,value)
 % Apply a mask to `A` if the corresponding value in `B` is below the
-% threshold value in `B`. `Value` is the value that masked elements will
-% take. A and B must be the same size. 
+% threshold parameter. `Value` is the new value that maskeded-out elements
+% will take. A and B must be the same size.
 % Modes (element in A gets `value` if...):
-% factor:       element in B less then `threshold` times B's peak value
+% factor:       element in B less than `threshold` times B's peak value
 % minumum:      element in B less than `threshold`
-% rangeExclude: element in B outside of `threshold` range
-% rangeInclude: element in B inside of `threshold` range
+% rangeExclude: element in B outside of `threshold` range (threshold is a
+%               2-element vector)
+% rangeInclude: element in B inside of `threshold` range (threshold is a
+%               2-element vector)
 % stdDev:       element in B more than `threshold` standard deviations
 %               below the mean in B
 % binary:       element in B equals 0 (B is a binary mask)
+
   switch mode
     case 'factor'
       m = max(B(:));
-      A(B<threshold*m) = value;
+      msk = B<threshold*m;
     case 'minimum'
-      A(B<threshold) = value;
+      msk = B<threshold;
     case 'rangeExclude'
-      A(B>threshold(1) & B<threshold(2)) = value;
+      msk = B>threshold(1) & B<threshold(2);
     case 'rangeInclude'
-      A(B<threshold(1) | B>threshold(2)) = value;
+      msk = B<threshold(1) | B>threshold(2);
     case 'stdDev'
-      A(B<(mean(nonzeros(B))-threshold*std(nonzeros(B)))) = value;
+      msk = B<(mean(nonzeros(B))-threshold*std(nonzeros(B)));
     case 'binary'
-        A(~B) = value;
+        msk = ~B;
   end
-
+  msk = ~imfill(~msk,conndef(length(size(A)),'maximal'),'holes');
+  % NOTE Mask elements are 1 if masked, but imfill thinks 0s are background
+  % NOTE conndef updates the connectivity required to define a hole based
+  % on the dimension of the matrix (2D is 9-1=8, 3D is 27-1=26, etc.)
+ 
+  A(msk) = value;
   
 function show(M)
 % Display an image with display settings that make sense for MRI
@@ -145,6 +162,7 @@ function block = unwrapBlock(block,center)
     end
   end
   
+ 
 function block = moduloBlock(block,center)
 % Perform phase unwrapping step on the provided subset (`block`) of the
 % whole image
@@ -158,5 +176,5 @@ function debug(Ps)
   P_ = sqrt(Px.^2+Py.^2);
   errors = numel(nonzeros(abs(P_)>pi));
   disp(errors)
-  %show(Ps)
+  show(Ps)
 
