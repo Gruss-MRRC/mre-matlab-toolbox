@@ -31,4 +31,4 @@ function f = bandpassfilter(sze, cutin, cutoff, n)
 	error('n must be an integer >= 1');
     end
     
-f = lowpassfilter(sze, cutoff, n) - lowpassfilter(sze, cutin, n);
+    f = lowpassfilter(sze, cutoff, n) - lowpassfilter(sze, cutin, n);

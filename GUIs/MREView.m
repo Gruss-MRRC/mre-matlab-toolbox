@@ -428,11 +428,12 @@ im_mag = handles.images{i}.mag;
 im_phase = handles.images{i}.phase;
 im_unwrap = im_phase;
 
-method = questdlg('Use Fast (nearest-neighbor) or Slow (quality-guided) process to unwrap:', ...
+method = questdlg('Use Fast (nearest-neighbor), Slow (quality-guided), or Constantini process to unwrap:', ...
  'Unwrap Algorithm', ...
- 'Fast','Slow','Fast');
+ 'Fast','Slow','Constantini','Fast');
 
 %-------------------------5D-------------------------%
+im1a_ph = handles.images{i}.phase; % initialize
 if length(dims) == 5,
   switch method
     case 'Slow'
@@ -445,7 +446,8 @@ if length(dims) == 5,
                   im1a_ph(:,:,slice,phase,dir) = QualityGuidedUnwrap2D_r1(...
                                     squeeze(im_mag(:,:,slice,phase,dir)),...
                                     squeeze(im_phase(:,:,slice,phase,dir)));
-                 stat = sprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g',slice,nSlices,phase,nPhases,dir); 
+                 stat = sprintf('Slice: %g/%g, Phase: %g/%g, Dir: %g',...
+                     slice,nSlices,phase,nPhases,dir); 
                  waitbar((dir-1+(slice-1+phase/nPhases)/nSlices)/dims(5),w,stat)
               end
           end
@@ -455,6 +457,12 @@ if length(dims) == 5,
     case 'Fast'
       tic
       im1a_ph = fastUnwrap(im_mag,im_phase);
+      runtime=toc;   
+    case 'Constantini'
+      tic
+      for dir = 1:dims(5);
+        im1a_ph(:,:,:,:,dir) = cunwrap4D(im_phase(:,:,:,:,dir));
+      end
       runtime=toc;
   end
      % Subtract phase due to background field 
@@ -468,8 +476,7 @@ if length(dims) == 5,
     mn_S = mean(im_ph_S,4);
 
     % Direction average (bulk motion)
-    %size(im_ph_P(4))
-    for h = 1:8,
+    for h = 1:nPhases,
         mnb_P(h) = mean(nonzeros(im_ph_P(:,:,4,h)));
         im_ph_P(:,:,:,h) = im_ph_P(:,:,:,h) - mnb_P(h);
         mnb_M(h) = mean(nonzeros(im_ph_M(:,:,4,h)));

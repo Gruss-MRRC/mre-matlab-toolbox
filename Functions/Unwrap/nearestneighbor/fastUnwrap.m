@@ -6,6 +6,10 @@ function P = fastUnwrap(M,P)
 % designed to unwrap magnetic resonance elastography (MRE) images stored in
 % DICOM or NIFTI format.
 %
+% Usage
+% ----
+% P = fastUnwrap(M,P)
+%
 % Inputs
 % ------
 % M: magnitude image
@@ -27,6 +31,13 @@ function P = fastUnwrap(M,P)
 % that deviate by more than pi from the central value. The path generation
 % and unwrapping algorithm are subfunctions that can easily be substituted
 % for other methods.
+%
+% Limitations
+% -----------
+% This is a very naive algorithm that breaks down on noisy or heavily wrapped
+% data. More robust, but slower algorithms are provided for working with these
+% datasets in Matlab. If speed is a priority, a Mex call to a C library or use
+% of a dedicated image processor such as ImageJ is recommended.
 %
 % Author
 % ------
@@ -55,12 +66,13 @@ function P = fastUnwrap(M,P)
   
   %--Unwrap along path--%
   for dir = 1:nDirs, for slice = 1:nSlices, for phase = 1:nPhases,
-    Ps = mask(... % mask current slice with magnitude filter
-        P(:,:,slice,phase,dir),...
-        M(:,:,slice,phase,dir),...
-        method,threshold,...
-        maskvalue);
-    Ps(Ps==-pi)=NaN;
+%     Ps = mask(... % mask current slice with magnitude filter
+%         P(:,:,slice,phase,dir),...
+%         M(:,:,slice,phase,dir),...
+%         method,threshold,...
+%         maskvalue);
+%     Ps(Ps==-pi)=NaN;
+    Ps=P(:,:,slice,phase,dir);
     x=X(1); y=Y(1);
     i=1;
     while i<length(X)
@@ -70,7 +82,9 @@ function P = fastUnwrap(M,P)
       i=i+1; x=X(i); y=Y(i);
     end
     if(verbose), debug(Ps), end
-    P(:,:,slice,phase,dir) = Ps;
+    tmp=Ps(~isnan(Ps));
+    mn=mean(nonzeros(tmp(:)));
+    P(:,:,slice,phase,dir) = Ps-mn;
   end, end, end % end for-loops
 
   

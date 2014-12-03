@@ -2,7 +2,7 @@ function [mag, varargout] = mri2mat()
 % Convert NIFTI and DICOM images to matrix format.
 %
 % Inputs:
-%   .nii, .nii.gz, .dcm, .dicom files (specified interactively)
+%   .nii, .nii.gz, .dcm, .dicom, .mat files (interactive prompt)
 %   
 % Outputs:
 %   mag:     4 or 5-D matrix (x,y,slice,phase,[direction])
@@ -28,40 +28,38 @@ function [mag, varargout] = mri2mat()
 
 % Open file
 [f p index] = uigetfile({...
-    '*.dicom', '3D DICOM to 4D Mag & Phase Matrices';...
-    '*.dicom', '3D DICOM to 5D Mag & Phase Matrices';...
-    '*.dicom', '3D DICOM to 5D Mag & Phase Matrices with NIFTI mask';...
-    '*.nii',   '4D NIFTI to 5D Mag & Phase Matrices';...
+    '*.dicom', 'DICOM, 4D mag & phase matrices';...
+    '*.dicom', 'DICOM, 5D mag & phase matrices';...
+    '*.dicom', 'DICOM, 5D mag & phase matrices with NIFTI mask';...
+    '*.nii*',   'NIFTI, 5D mag & phase matrices';...
     '*.nii',   'NIFTI File';...
     '*.nii.gz','NIFTI Archive';...
-    '*.mat',   'MAT File from MRE_Preview';});
+    '*.mat',   'MAT, mag, phase, header';...
+    '*.mat',   'MAT, mag, header'});
   
 % Do something based on filetype
 switch index
   case 1 % MRE Image
     [mag,phase,info] = readDICOM4D(p,f);
-    no_phase = false;
   case 2 % Motion-sensitized MRE image
     [mag,phase,info] = readDICOM5D(p,f);
-    no_phase = false;
   case 3 % Motion-sensitized MRE image + mask
     [mag,phase,info] = readDICOM5D_Mask(p,f);
-    no_phase = false;
   case 4 % 5D NIFTI
     [mag,phase,info] = readNIFTI5D(p,f);
-    no_phase = false;
   case 5 % NIFTI file
     [mag,info] = readNIFTI(p,f);
-    no_phase = true;
   case 6 % NIFTI archive
     [mag,info] = readNIFTI(p,f);
-    no_phase = true;
   case 7 % MAT file
     vars = open([p f]);
     mag = vars.M;
     phase = vars.P;
     info = vars.header;
-    no_phase = false;
+  case 8 % MAT file
+    vars = open([p f]);
+    mag = vars.M;
+    info = vars.header;
 end
 
 % Add data about which file was opened to header info
@@ -72,9 +70,9 @@ info.path = p;
 if nargout == 3, 
   varargout{1} = phase; 
   varargout{2} = info; % return mag, phase, and info
-elseif nargout == 2 && no_phase, 
+elseif nargout == 2 && ~exist('phase','var')
   varargout{1} = info; % return mag and info
-elseif nargout == 2 && ~no_phase,
+elseif nargout == 2 && exist('phase','var')
   varargout{1} = phase; % return mag and phase
 end
 
@@ -114,12 +112,13 @@ function [mag,phase,info] = readDICOM4D(p,f)
   
 
   function [mag,phase,info] = readDICOM5D(p,f)
-% Take a 3D DICOM file and output 5D matrices for phase and magnitude by
-% shuffling the 4th dimension. Assume that the input format is [x,y,t],
+% Take a 4D DICOM file and output 5D matrices for phase and magnitude by
+% shuffling the 4th dimension. Assume that the input format is [x,y,c,t],
 % where the time axis is filled according to the sequence
-% [(mag,slice1,dir1,t1),(mag,slice1,dir1,t2)...(phase,sliceN,dirN,tN)].
+% [(mag,slice1,dir1,t1),(mag,slice1,dir1,t2)...(phase,sliceN,dirN,tN)],
+% and the third axis, color, is a singleton.
 % Decompose into a matrix for phase and a matrix for magnitude, which
-% should each be of the form [x,y,z,phase,direction], where phase is a
+% should each be of the form [x,y,z,phase,direction]; phase is the
 % temporal dimension. The difference between READNIFTI5D and READDICOM5D is
 % that the DICOM header contains information about the number of
 % dimensions, but the NIFTI header does not. The number of directions is
@@ -130,7 +129,7 @@ function [mag,phase,info] = readDICOM4D(p,f)
   
   % Open file
   im = dicomread([p f]);
-  im = double(squeeze(im));
+  im = double(squeeze(im)); %remove singleton 3rd dimension ("color" axis)
   
   % Metadata
   if exist('/gmrrc/mrbin/dcmdump','file') && isunix()
@@ -157,15 +156,16 @@ function [mag,phase,info] = readDICOM4D(p,f)
   mag = zeros(nX,nY,nSlices,nPhases,nDirs);
   phase = mag;
   for slice = 1:nSlices,
-    for dir = 1:nDirs,
-      for ph = 1:nPhases,
-        mag(:,:,slice,ph,dir) = im(:,:,k1);
-        phase(:,:,slice,ph,dir) = im(:,:,nVolumes/2+k1);
-        k1 = k1 + 1;
-       end
-    end
+      for dir = 1:nDirs,
+          for ph = 1:nPhases,
+              mag(:,:,slice,ph,dir) = im(:,:,k1);
+              phase(:,:,slice,ph,dir) = im(:,:,nVolumes/2+k1);
+              k1 = k1 + 1;
+          end
+      end
   end
-  phase = double(phase)*pi/2048-pi;
+
+  phase = double(phase)*pi/2048-pi; %scale from scanner units to radians
   
   
 function [mag,phase,info] = readDICOM5D_Mask(p,f)
