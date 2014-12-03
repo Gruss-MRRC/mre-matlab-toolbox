@@ -4,20 +4,27 @@ A Matlab toolbox for working with magnetic resonance elastography (MRE) images.
 
 ## Features
 
+- Visualize 3D time-dependent displacement data
+- Construct 3D elastograms
+- Correct phase-wrapped MRE data
 - Open common image formats such as DICOM and NIFTI and load into Matlab arrays with correct orientation and dimensionality
-- Viewer for 3D to 5D images, with anti-aliasing (phase unwrap) tools
 - Volume segmentation GUI with image processing features to extract information about subvolumes of NIFTI files (e.g., determine the volume of the ventricles in the brain)
 - MRE sequence simulator
 
 ## Screenshots
 
-![volume segmentation gui](Examples/html/segmentvolumes.png)
+![3d mesh visualization](Examples/html/mremesh.png)
 
-_**Figure:** Volume Segmentation_
+_**Figure:** 3D mesh visualization of motion_
 
 ![mreview gui](Examples/html/mreview.png)
 
-_**Figure:** MREView_
+_**Figure:** MRE Viewer_
+
+![harmonic map](Examples/html/harmonicmap.jpg)
+
+_**Figure:** Amplitude map of displacement data_
+
 
 ## Installation
 
