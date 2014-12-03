@@ -1,6 +1,6 @@
-# MRE Matlab Toolbox
+# MR Elastography Matlab Toolbox
 
-A Matlab toolbox for working with magnetic resonance elastography (MRE) images, developed at the Gruss Magnetic Research Center at Albert Einstein College of Medicine.
+A Matlab toolbox for working with magnetic resonance elastography (MRE) images. 
 
 ## Features
 
@@ -47,24 +47,33 @@ If you find a bug in one of the programs, please report it using GitHub Issues o
 
 ## Dependencies
 
+Individual features may not depend on all of the components listed below
+
 - [NIFTI Toolbox for Matlab][niftitoolbox]: Free software (BSD License)
 - [Image Processing Toolbox for Matlab][imageprocessing]: License required from the Mathworks
 - [2D Phase Unwrapping Functions][phaseunwrap]: Free software (BSD License)
 - [DCMDUMP][dcmdump]: Free software (BSD License)
+- [FSL][fsl]: Free software from the University of Cambridge (Non-commercial license)
+- [Fiji][fiji]: Free image processing suite (GNU GPL license) 
+- [Miji][miji]: ImageJ interface in Matlab (BSD license)
+- [Phase Tools][phasetools]: Phase unwrapping ImageJ plugin (CC-BY)
 
 [niftitoolbox]:http://www.mathworks.com/matlabcentral/fileexchange/8797-tools-for-nifti-and-analyze-image/content/NIfTI_20140122.zip
 [imageprocessing]:http://www.mathworks.com/products/image/
 [phaseunwrap]:http://www.mathworks.com/matlabcentral/fileexchange/29497-goldsteinunwrap2d-r1
 [dcmdump]:http://support.dcmtk.org/docs/dcmdump.html
-
-Individual features may not depend on all of the components listed.
+[fsl]:http://fsl.fmrib.ox.ac.uk/fsl/fslwiki/
+[fiji]:http://fiji.sc
+[miji]:http://fiji.sc/Miji
+[phasetools]:http://cognitive-eurhythmics.com/code.html
 
 ## License
 
+The MRE Matlab Toolbox is free software licensed under the open-source Apache License 2.0. 
 Unless otherwise noted, the following copyright notice applies to all files in the MRE Matlab Toolbox.
 
 ```
-Copyright 2014 Albert Einstein College of Medicine
+Copyright 2014 Albert Einstein College of Medicine and Contributors
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -79,5 +88,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 ```
 
-- [Copyright Notice](NOTICE.txt)
+- [Attribution Notice](NOTICE.txt)
 - [Apache License 2.0](LICENSE.txt)

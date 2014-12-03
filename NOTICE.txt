@@ -1,3 +1,26 @@
-MRE Matlab Toolbox
-------------------
-Copyright 2014 Albert Einstein College of Medicine
+Attribution Notices
+
+---------------------------------------------------
+
+MRE Matlab Toolbox Programs
+Copyright (c) 2014, Alex Krolick
+              2013, Mark Wagshul
+
+Subaxis
+Copyright (c) 2014, Aslak Grinsted
+
+Quality-Guided Unwrap
+Copyright (c) 2014, Alex Krolick
+              2010, Carey Smith
+              2008, Bruce Spottiswoode
+              
+Constantini Unwrap
+Copyright (c) 2014, Eric Barnhill
+
+Bandpass Filter
+Copyright (c) 1999, Peter Kovesi
+
+---------------------------------------------------
+
+Source code contains additional attribution details
+and/or contact information for the contributors
