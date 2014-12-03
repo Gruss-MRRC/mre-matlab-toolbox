@@ -11,11 +11,11 @@ A Matlab toolbox for working with magnetic resonance elastography (MRE) images.
 
 ## Screenshots
 
-![volume segmentation gui](examples/html/segmentvolumes.png)
+![volume segmentation gui](Examples/html/segmentvolumes.png)
 
 _**Figure:** Volume Segmentation_
 
-![mreview gui](examples/html/mreview.png)
+![mreview gui](Examples/html/mreview.png)
 
 _**Figure:** MREView_
 
@@ -25,9 +25,17 @@ _**Figure:** MREView_
 
 Make a personal copy of the repository by running `git clone /path/to/repository` in the place where you want the files to appear. This will copy the repository to a new folder on your computer. On GitHub, there is a link you can copy with the path in a box on the right side of the page. Using Git ensures that you can easily get updates by running `git pull`, as well as track your own changes and create pull requests.
 
+```
+git clone https://github.com/Gruss-MRRC/mre-matlab-toolbox.git
+```
+
 ### Download ZIP Archive
 
 GitHub allows you to download a snapshot of the code as it stands. You'll have to download the ZIP again to get updates. Extract the files into a convenient folder.
+
+```
+https://github.com/Gruss-MRRC/mre-matlab-toolbox/archive/master.zip
+```
 
 ### Add to path
 
