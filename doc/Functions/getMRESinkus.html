@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>getMRESinkus</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; getMRESinkus.m</div>
+		</header>
+		<article>
+<h1>getMRESinkus</h1>
+    <p><b>function [im_mag, im_phase] = getMRESinkus(showFig)</b></p>
+    <p> Extract magnitude and phase images from DICOM files.
+ On run, prompts for a DICOM image of the subject's brain
+ and a NIFTI (*.nii) image created using the Brain
+ Extraction Toolbox (BET). The NIFTI image is used as 
+ a mask to determine tissue location. An phase-unwrapping
+ (anti-aliasing) step is performed before returning 
+ data structures containing magnitude and phase information.
+ These images may be analysed slice-by-slice using, e.g,
+ &gt;&gt; for i = 1:8, subplot(2,4,i), 
+      imagesc(&lt;PHASE IMAGE&gt;(:,:,&lt;SLICE&gt;,i,&lt;DIRECTION&gt;)), 
+      axis square, 
+    end
+
+ Inputs:
+   showFig:     Display images, true or false (faster with false)
+
+ Outputs:
+   im_mag:      4D Matrix (x,y,slice,phase)
+   im_phase:    5D Matrix (x,y,slice,phase,direction)
+
+ Depends:
+   NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
+   dcmdump: /gmrrc/mrbin/dcmdump
+   GNU core utils
+   Expects a DICOM and NIFTI image to already exist.
+
+ Authors:
+   Based on code by Ralph Sinkus &lt;ralph.sinkus@kcl.ac.uk&gt;
+   Mark Wagshul &lt;mark.wagshul@einstein.yu.edu&gt;
+   Alex Krolick &lt;amk283@cornell.edu&gt;
+
+ See also <a href="getMREimages.html" class="code" title="function [im_mag, im_phase] = getMREimages(sliceRange,showFig)">getMREimages</a>, load_untouch_nii</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+        <li><a href="lunii.html" class="code" title="function [nii_file, fileLocation] = lunii_multi(openText,fileLocation)">lunii</a>	Function to load nii file (untouch)</li>
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="getMRESinkus.m">getMRESinkus.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>parseArgs</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../../index.html">Home</a> &gt;  <a href="../index.html">Functions</a> &gt; <a href="index.html">Plot</a> &gt; parseArgs.m</div>
+		</header>
+		<article>
+<h1>parseArgs</h1>
+    <p><b>function ArgStruct=parseArgs(args,ArgStruct,varargin)</b></p>
+    <p> Helper function for parsing varargin. 
+
+
+ ArgStruct=parseArgs(varargin,ArgStruct[,FlagtypeParams[,Aliases]])
+
+ * ArgStruct is the structure full of named arguments with default values.
+ * Flagtype params is params that don't require a value. (the value will be set to 1 if it is present)
+ * Aliases can be used to map one argument-name to several argstruct fields
+
+
+ example usage: 
+ --------------
+ function parseargtest(varargin)
+
+ %define the acceptable named arguments and assign default values
+ Args=struct('Holdaxis',0, ...
+        'SpacingVertical',0.05,'SpacingHorizontal',0.05, ...
+        'PaddingLeft',0,'PaddingRight',0,'PaddingTop',0,'PaddingBottom',0, ...
+        'MarginLeft',.1,'MarginRight',.1,'MarginTop',.1,'MarginBottom',.1, ...
+        'rows',[],'cols',[]); 
+
+ %The capital letters define abrreviations.  
+ %  Eg. parseargtest('spacingvertical',0) is equivalent to  parseargtest('sv',0) 
+
+ Args=parseArgs(varargin,Args, ... % fill the arg-struct with values entered by the user
+           {'Holdaxis'}, ... %this argument has no value (flag-type)
+           {'Spacing' {'sh','sv'}; 'Padding' {'pl','pr','pt','pb'}; 'Margin' {'ml','mr','mt','mb'}});
+
+ disp(Args)
+
+
+
+
+ Aslak Grinsted 2004</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+        <li><a href="subaxis.html" class="code" title="function h=subaxis(varargin)">subaxis</a>	SUBAXIS Create axes in tiled positions. (just like subplot)</li>
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="parseArgs.m">parseArgs.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

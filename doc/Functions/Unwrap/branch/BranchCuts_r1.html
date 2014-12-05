@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>BranchCuts_r1</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">Functions</a> &gt; <a href="#">Unwrap</a> &gt; <a href="index.html">branch</a> &gt; BranchCuts_r1.m</div>
+		</header>
+		<article>
+<h1>BranchCuts_r1</h1>
+    <p><b>function branch_cuts=BranchCuts(residue_charge, max_box_radius, IM_mask)</b></p>
+    <p>%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+ BranchCuts.m generates branch cuts based on the phase residues. This is
+ done using the Goldstein method, as described in &quot;Two-dimensional phase
+ unwrapping: theory, algorithms and software&quot; by Dennis Ghiglia and
+ Mark Pritt.
+ &quot;residue_charge&quot; is a matrix wherein positive residues are 1 and
+ negative residues are 0.
+ &quot;max_box_radius&quot; defines the maximum search radius for the balancing of
+ residues. If this is too large, areas will be isolated by the branch
+ cuts.
+ &quot;IM_mask&quot; is a binary matrix. This serves as an artificial border for the
+ branch cuts to connect to.
+ Created by B.S. Spottiswoode on 15/10/2004
+ Last modified on 18/10/2004
+ 07/19/2010 Modified by Carey Smith
+             Corrected a NaN divide by zero problem
+             Return immediately, if no residues
+             Eliminated code Analyzer warnings about &amp;&amp; vs. &amp;, || vs. |
+ 2010/09/15  Match with residues of opposite sign.
+             Change the order of the loops: Put the radius loop on the outside,
+             to let each residue try to find its closest neighbor of opposite
+             sign.  This generally finds closer pairs.
+             Use residue_charge_masked in place of residue_charge in some places.
+             Modified &quot;for n&quot; loop to just use the needed indices.
+             When making a branch cut to the edge, go straight, rather than diagonally.
+             Eliminated unnecessary sections of code &amp; resulting unused variables.
+             Sped-up internal function &quot;branch_cuts&quot;.
+             Added some error checks.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+        <li><a href="GoldsteinUnwrap2D_r1.html" class="code" title="function im_unwrapped = GoldsteinUnwrap2D_r1(im_mag,im_phase)">GoldsteinUnwrap2D_r1</a>	GoldsteinUnwrap2D is a script to demonstrate the 2D Goldstein branch cut phase unwrapping algorithm.</li>
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="BranchCuts_r1.m">BranchCuts_r1.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

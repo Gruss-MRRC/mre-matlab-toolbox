@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>subaxis</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../../index.html">Home</a> &gt;  <a href="../index.html">Functions</a> &gt; <a href="index.html">Plot</a> &gt; subaxis.m</div>
+		</header>
+		<article>
+<h1>subaxis</h1>
+    <p><b>function h=subaxis(varargin)</b></p>
+    <p>SUBAXIS Create axes in tiled positions. (just like subplot)
+   Usage:
+      h=subaxis(rows,cols,cellno[,settings])
+      h=subaxis(rows,cols,cellx,celly[,settings])
+      h=subaxis(rows,cols,cellx,celly,spanx,spany[,settings])
+
+ SETTINGS: Spacing,SpacingHoriz,SpacingVert
+           Padding,PaddingRight,PaddingLeft,PaddingTop,PaddingBottom
+           Margin,MarginRight,MarginLeft,MarginTop,MarginBottom
+           Holdaxis
+
+           all units are relative (i.e. from 0 to 1)
+
+           Abbreviations of parameters can be used.. (Eg MR instead of MarginRight)
+           (holdaxis means that it wont delete any axes below.)
+
+
+ Example:
+
+   &gt;&gt; subaxis(2,1,1,'SpacingVert',0,'MR',0); 
+   &gt;&gt; imagesc(magic(3))
+   &gt;&gt; subaxis(2,'p',.02);
+   &gt;&gt; imagesc(magic(4))
+
+ 2001-2014 / Aslak Grinsted  (Feel free to modify this code.)</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+        <li><a href="parseArgs.html" class="code" title="function ArgStruct=parseArgs(args,ArgStruct,varargin)">parseArgs</a>	Helper function for parsing varargin.</li>
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="subaxis.m">subaxis.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

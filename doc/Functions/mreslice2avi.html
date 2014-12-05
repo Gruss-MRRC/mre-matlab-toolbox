@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>mreslice2avi</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; mreslice2avi.m</div>
+		</header>
+		<article>
+<h1>mreslice2avi</h1>
+    <p><b>function mreslice2avi(phase_image,movie_filename_prefix,slice)</b></p>
+    <p> Save MRE motion sequence to avi movie.
+
+ Plot X,Y,Z components of motion side-by-side, capture each frame, and
+ save to a movie file. Assumes a 5D phase image, where the dimensions are
+ (x,y,slice,phase,direction). Phase is equivalent to timestep. Each frame
+ in the movie is a step along the phase axis. 
+
+ Inputs
+ ------
+ phase_image: 5D phase image
+ movie_filename_prefix: String to prepend to the slice number in .avi file
+ slice: Integer index of the slice (z-coordinate) to be viewed.
+        If you don't know, try ceil(size(phase_image,3)/2)
+
+ Notes on creating 'phase_image'
+ -------------------------------
+ The MREView GUI can be used to preview DICOM and NIFTI files and launch
+ phase unwrapping sequences for aliased images. Use the 'Save' button to
+ store the processed image in Matlab's .mat format, and the 'load' command
+ to pull in the variables for use in MRESLICE2AVI.
+ 
+ Authors
+ -------
+ Alex Krolick &lt;amk283@cornell.edu&gt;
+
+ See also MREView</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="mreslice2avi.m">mreslice2avi.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

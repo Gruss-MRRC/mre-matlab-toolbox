@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>bulkmotion</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; bulkmotion.m</div>
+		</header>
+		<article>
+<h1>bulkmotion</h1>
+    <p><b>function amplitude = bulkmotion(P,scale,direction,showplots)</b></p>
+    <p> Compute amplitude of bulk motion waveform from a phase map. Use the mean
+ phases of image slices (3rd dimension) to infer the bulk motion waveform
+ (4th dimension) of the entire volume. Find the peak-to-peak amplitude of
+ this wave.
+ 
+ Usage:
+ amplitude = bulkmotion(P,scale,direction,showplots)
+
+ Inputs:
+ P .......... Phase map (4 or 5D), where the dimensions are
+              (X,Y,Z,time,[direction]) and units are radians
+ scale ...... Conversion factor between radians and output units
+ direction .. If P is 5D, which direction to use
+              If P is 4D, must equal 1
+ showplots .. Boolean; whether or not to open a figure with motion plots
+
+ Outputs:
+ amplitude .. Peak-to-peak wave amplitude (in radians) * scale</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="bulkmotion.m">bulkmotion.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

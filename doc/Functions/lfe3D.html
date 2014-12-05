@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>lfe3D</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; lfe3D.m</div>
+		</header>
+		<article>
+<h1>lfe3D</h1>
+    <p><b>function [elastogramVol,varargout] = lfe3D(px,py,pz,mask,f,fov)</b></p>
+    <p> Apply LFE reconstruction to 3D MRE volumes
+
+ Usage:
+ [elastogramVol,ex,ey,ez] = lfe3D(px,py,pz,m,f,fov)
+
+ px,py,pz ....... 3D or 4D matrices (X,Y,Z,[T]) containing unwrapped phase 
+                  data for each sensitization direction (x,y,z encoding)
+ mask............ 3D logical matrix                   
+ f .............. mechanical frequency (Hz)
+ fov ............ field-of-view ([X Y]) (meters)
+ 
+ elastogramVol .. 3D matrix of averaged elasticity values (kPa)
+ ez,ey,ez      .. [optional] 3D matrices of elasticity values in each direction
+ 
+ LFE is applied to 2D slices along the third dimension for each phase matrix. 
+ The 3D volume is the average of the results for each phase encoding direction,
+ masked by the provided magnitude image. 
+ 
+ Author:
+ Alex Krolick &lt;amk283@cornell.edu&gt;
+
+ See also: <a href="lfe.html" class="code" title="function elastogram = lfe(img,mf,fov,scals,ws,norient,hm)">lfe</a></p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+        <li><a href="lfe.html" class="code" title="function elastogram = lfe(img,mf,fov,scals,ws,norient,hm)">lfe</a>	Create elastogram from MRE phase data using local-frequency</li>
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="lfe3D.m">lfe3D.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

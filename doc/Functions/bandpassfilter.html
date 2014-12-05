@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>bandpassfilter</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; bandpassfilter.m</div>
+		</header>
+		<article>
+<h1>bandpassfilter</h1>
+    <p><b>function f = bandpassfilter(sze, cutin, cutoff, n)</b></p>
+    <p> Creates bandpass Butterworth filter in two dimensions.
+
+ BANDPASSFILTER - Constructs a band-pass butterworth filter
+
+ usage: f = bandpassfilter(sze, cutin, cutoff, n)
+ 
+ where: sze    is a two element vector specifying the size of filter 
+               to construct.
+        cutin and cutoff are the frequencies defining the band pass 0 - 0.5
+        n      is the order of the filter, the higher n is the sharper
+               the transition is. (n must be an integer &gt;= 1).
+
+ The frequency origin of the returned filter is at the corners.
+
+ See also: <a href="lowpassfilter.html" class="code" title="function f = lowpassfilter(sze, cutoff, n)">LOWPASSFILTER</a>, HIGHPASSFILTER, HIGHBOOSTFILTER</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+        <li><a href="lowpassfilter.html" class="code" title="function f = lowpassfilter(sze, cutoff, n)">lowpassfilter</a>	lowpassfilter.m - Creates lowpass Butterworth filter in two dimensions.</li>
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+        <li><a href="getUmap.html" class="code" title="function getUmap(im_mag,im_phase,sliceNum)">getUmap</a>	</li>
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="bandpassfilter.m">bandpassfilter.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>

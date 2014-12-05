@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>GuidedFloodFill_r1</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../../../m2html.css" />
+</head>
+<body>
+	<main>
+		<header>
+			<div id="_path"><a href="../../../index.html">Home</a> &gt;  <a href="../../index.html">Functions</a> &gt; <a href="#">Unwrap</a> &gt; <a href="index.html">quality</a> &gt; GuidedFloodFill_r1.m</div>
+		</header>
+		<article>
+<h1>GuidedFloodFill_r1</h1>
+    <p><b>function IM_unwrapped = GuidedFloodFill2(IM_phase, IM_mag, IM_unwrapped, unwrapped_binary, derivative_variance, adjoin, IM_mask)</b></p>
+    <p> GuidedFloodFill.m unwraps a single 2D image using the quaility guided technique
+ function IM_unwrapped = GuidedFloodFill(IM_phase, IM_mag, IM_unwrapped, unwrapped_binary, derivative_variance, adjoin, IM_mask)
+ It can also be used to unwrap phases in cases when there are no branch cuts.
+
+ Input: IM_phase, IM_unwrapped (seed points / pixels already unwrapped),
+ unwrapped_binary the derivative variance, an adjoining matrix and a mask.
+ Inputs:
+  IM_phase     = 2D array of wrapped phases (rads)
+  IM_mag       = 2D array of magnitudes
+  IM_unwrapped = a 2D array for the unwrapped phases (rads)
+                 This is initialized for the reference point set.
+  unwrapped_binary = a 2d array to identifying the points that have been unwrapped.
+                 This is initialized for the reference point set.
+  derivative_variance = a 2D array of the IM_phase's derivative variances
+  adjoin       = a 2D identifying the valid pixels adjoining the unwrapped pixels.
+                 This is initialized for the reference point set.
+  IM_mask      = a 2D array identifying the valid pixels
+ Outputs:
+  IM_unwrapped = the 2D array of unwrapped phases (rads)
+
+ This code can easily be extended for 3D phase unwrapping.
+ Technique adapted from:
+ D. C. Ghiglia and M. D. Pritt, Two-Dimensional Phase Unwrapping:
+ Theory, Algorithms and Software. New York: Wiley-Interscience, 1998.</p>
+
+<h3>References</h3>
+    <h4>Calls</h4>
+      <ul>
+        
+      </ul>
+    <h4>Called by</h4>
+      <ul>
+        
+        <li><a href="QualityGuidedUnwrap2D_r1.html" class="code" title="function im_unwrapped = QualityGuidedUnwrap2D_r1(im_mag,im_phase)">QualityGuidedUnwrap2D_r1</a>	Implements 2D quality guided path following phase unwrapping algorithm.</li>
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+      <h3 id"_download">DOWNLOAD</h3>
+      <p><a href="GuidedFloodFill_r1.m">GuidedFloodFill_r1.m</a></p>
+
+      
+      </article>
+      <footer>
+		  <address>Generated on Fri 05-Dec-2014 12:01:07 by <strong><a href="http://www.artefact.tk/software/matlab/m2html/" title="Matlab Documentation in HTML">m2html</a></strong> &copy; 2005</address>
+	  </footer>
+	</main>
+</body>
+</html>
