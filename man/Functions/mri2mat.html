@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>mri2mat</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+  <div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; mri2mat.m</div>
+
+<h3>NAME</h3>
+    <p>mri2mat - Convert NIFTI and DICOM images to matrix format.</p>
+
+<h3>SYNOPSIS</h3>
+    <div id="synopsis">
+    <p>function [mag, varargout] = mri2mat()</p>
+    <p> Convert NIFTI and DICOM images to matrix format.
+
+ Inputs:
+   .nii, .nii.gz, .dcm, .dicom, .mat files (interactive prompt)
+   
+ Outputs:
+   mag:     4 or 5-D matrix (x,y,slice,phase,[direction])
+  [phase]:  4 or 5-D matrix (x,y,slice,phase,[direction]) *optional
+  [info]:   structure containing metadata about the file  *optional
+
+ Dependencies:
+   + NIFTI Toolbox: /gmrrc/mrbin/GMRRC/NIFTI
+   ~ BET Toolbox: /gmrrc/mrbin/fsl.cver/bin/bet
+   * dcmdump: /gmrrc/mrbin/dcmdump
+   * GNU core utils (grep, awk, etc.)
+   --------------
+   +  Required to work with NIFTI images
+   ~  Required to create masks, but not called in this program
+   *  Optional, but faster than using MATLAB's DICOM toolbox for metadata
+ 
+ Authors:
+   Mark Wagshul &lt;mark.wagshul@einstein.yu.edu&gt;
+   Alex Krolick &lt;amk283@cornell.edu&gt;
+
+ See also <a href="getMRESinkus.html" class="code" title="function [im_mag, im_phase] = getMRESinkus(showFig)">getMRESinkus</a>, MRE_Preview, nnUnwrap, load_untouch_nii, load_nii,
+ dicomread, dicominfo</p>
+          
+          
+    </div>
+
+<h3>DESCRIPTION</h3>
+        <p id="purpose">Convert NIFTI and DICOM images to matrix format.</p>
+
+<h3>REFERENCES</h3>
+    <h4>Calls:</h4>
+      <ul>
+        
+        <li><a href="lunii.html" class="code" title="function [nii_file, fileLocation] = lunii_multi(openText,fileLocation)">lunii</a>	Function to load nii file (untouch)</li>
+      </ul>
+    <h4>Called by:</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+
+      
+
+    <address>Generated on Thu 04-Dec-2014 18:29:40</address>
+</body>
+</html>

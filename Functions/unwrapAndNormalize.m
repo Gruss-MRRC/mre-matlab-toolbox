@@ -1,6 +1,12 @@
 function unwrapAndNormalize(magfile,rawmagfile,phasefile,outputfile)
+% Correct phase wrapping & phase offsets between slices
+%
 % 1. Unwrap with ImageJ Phase Tools (interactive)
 % 2. Normalize by subtracting mean phase from each slice
+%
+% Usage:
+% unwrapandnormalize(magfile,rawmagfile,phasefile,outputfile)
+%
 % Inputs:
 % magfile ..... NIFTI magnitude, brain extracted 3D volume.
 %               Filename (string).
@@ -13,8 +19,8 @@ function unwrapAndNormalize(magfile,rawmagfile,phasefile,outputfile)
 %               Filename (string).
 % outputfile .. Base name for output files (string).
 % 
-% Usage:
-% unwrapandnormalize(magfile,rawmagfile,phasefile,outputfile)
+% Author:
+% Alex Krolick <amk283@cornell.edu>
 
 % Options
 showplots=false;

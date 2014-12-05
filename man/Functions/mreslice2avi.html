@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>mreslice2avi</title>
+    <link rel="shortcut icon" href="../images/favicon.ico" />
+    <link rel="stylesheet" type="text/css" href="../css/manpage_stylesheet.css" />
+	<link type="text/css" rel="stylesheet" href="../m2html.css" />
+</head>
+<body>
+  <div id="_path"><a href="../index.html">Home</a> &gt;  <a href="index.html">Functions</a> &gt; mreslice2avi.m</div>
+
+<h3>NAME</h3>
+    <p>mreslice2avi - Save MRE motion sequence to avi movie.</p>
+
+<h3>SYNOPSIS</h3>
+    <div id="synopsis">
+    <p>function mreslice2avi(phase_image,movie_filename_prefix,slice)</p>
+    <p> Save MRE motion sequence to avi movie.
+
+ Plot X,Y,Z components of motion side-by-side, capture each frame, and
+ save to a movie file. Assumes a 5D phase image, where the dimensions are
+ (x,y,slice,phase,direction). Phase is equivalent to timestep. Each frame
+ in the movie is a step along the phase axis. 
+
+ Inputs
+ ------
+ phase_image: 5D phase image
+ movie_filename_prefix: String to prepend to the slice number in .avi file
+ slice: Integer index of the slice (z-coordinate) to be viewed.
+        If you don't know, try ceil(size(phase_image,3)/2)
+
+ Notes on creating 'phase_image'
+ -------------------------------
+ The MREView GUI can be used to preview DICOM and NIFTI files and launch
+ phase unwrapping sequences for aliased images. Use the 'Save' button to
+ store the processed image in Matlab's .mat format, and the 'load' command
+ to pull in the variables for use in MRESLICE2AVI.
+ 
+ Authors
+ -------
+ Alex Krolick &lt;amk283@cornell.edu&gt;
+
+ See also MREView</p>
+          
+          
+    </div>
+
+<h3>DESCRIPTION</h3>
+        <p id="purpose">Save MRE motion sequence to avi movie.</p>
+
+<h3>REFERENCES</h3>
+    <h4>Calls:</h4>
+      <ul>
+        
+      </ul>
+    <h4>Called by:</h4>
+      <ul>
+        
+      </ul>
+      <!-- crossreference -->
+
+      
+
+      
+
+      
+
+    <address>Generated on Thu 04-Dec-2014 18:29:40</address>
+</body>
+</html>
