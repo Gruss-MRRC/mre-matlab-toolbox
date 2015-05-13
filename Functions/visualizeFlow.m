@@ -45,6 +45,7 @@ function frames = visualizeFlow(M,V,CM,C)
   h = figure();
   set(h,'color','black');
   
+  % Show brain anatomy as a planar countour map of grey/white/csf.
   sub1 = axes('Position',[0.10 0.10 0.70 0.80]);
     hold on
     view([180-37.5 45])
@@ -58,6 +59,7 @@ function frames = visualizeFlow(M,V,CM,C)
     peakM = max(m(:));
     cc = contour((m./peakM));
   
+  % Fluid flow visualization
   sub2 = axes('Position',[0.05 0.85 0.95 0.10]);
     hold on
     plot([1:3*T],[netu netu netu],'r:','LineWidth',2)
@@ -78,6 +80,9 @@ function frames = visualizeFlow(M,V,CM,C)
     u(imdilate(abs(cdatu),strel('disk',1))==0)=NaN;
     c(imdilate(abs(cdatc),strel('disk',1))==0)=NaN;
 
+    % Color upward flow differently than downward flows
+    % Blood is red/blue
+    % CSF is yellow/cyan
     axes(sub1)
       s1 = surf(u.*(cdatu== 1),...%'CData',cdatu*scale,...
 		       'FaceColor','red',...
@@ -96,6 +101,7 @@ function frames = visualizeFlow(M,V,CM,C)
 		       'EdgeColor','cyan'...
 		       );
 		     
+    % Plot flow data on a line chart in the background
     axes(sub2)
       pt1 = plot(t+t_,netu(t),'r.','MarkerSize',20);
       pt2 = plot(t+t_,netc(t),'y.','MarkerSize',20);
